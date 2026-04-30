@@ -606,14 +606,29 @@ async function deleteClient(clientId){
   const confirmed=await showConfirm('حذف العميل','سيتم حذف العميل وجميع بياناته نهائياً. هل أنت متأكد؟');
   if(!confirmed) return;
   loading(true);
-  await db.delWhere('client_diseases','client_id',clientId);await db.delWhere('client_allergies','client_id',clientId);
-  await db.delWhere('visits','client_id',clientId);await db.delWhere('body_measurements','client_id',clientId);
-  await db.delWhere('client_photos','client_id',clientId);await db.delWhere('notifications','client_id',clientId);
-  await db.delWhere('messages','client_id',clientId);await db.delWhere('subscriptions','client_id',clientId);
-  const cl=await db.get('clients',`?id=eq.${clientId}`);
-  if(cl[0]?.user_id) await db.del('users',cl[0].user_id);
-  await db.del('clients',clientId);
-  loading(false);closeModal();toast('تم حذف العميل ✅');loadClients();
+  try {
+    await db.delWhere('client_lab_requests','client_id',clientId);
+    await db.delWhere('client_medication_requests','client_id',clientId);
+    await db.delWhere('refunds','client_id',clientId);
+    await db.delWhere('client_diseases','client_id',clientId);
+    await db.delWhere('client_allergies','client_id',clientId);
+    await db.delWhere('body_measurements','client_id',clientId);
+    await db.delWhere('client_photos','client_id',clientId);
+    await db.delWhere('notifications','client_id',clientId);
+    await db.delWhere('messages','client_id',clientId);
+    await db.delWhere('visits','client_id',clientId);
+    await db.delWhere('subscriptions','client_id',clientId);
+    const cl=await db.get('clients',`?id=eq.${clientId}`);
+    await db.del('clients',clientId);
+    if(cl[0]?.user_id) await db.del('users',cl[0].user_id);
+    loading(false);
+    closeModal();
+    toast('تم حذف العميل ✅','#2e7d32');
+    loadClients();
+  } catch(e) {
+    loading(false);
+    toast('حدث خطأ أثناء الحذف','#c62828');
+  }
 }
 
 // ======= VISITS =======
