@@ -512,7 +512,20 @@ async function loadSubDetails(clientId,subs){
     <div class="form-group"><label>الباقة</label><select id="renewPkg">${packages.map(p=>`<option value="${p.id}" data-days="${p.duration_days}" data-sessions="${p.sessions}" data-price="${p.price}">${p.name} - ${p.price} ج (${p.duration_days} يوم / ${p.sessions} جلسات)</option>`).join('')}</select></div>
     <div class="form-row"><div class="form-group"><label>تاريخ البداية</label><input type="date" id="renewStart" value="${new Date().toISOString().split('T')[0]}"></div><div class="form-group"><label>المبلغ المدفوع</label><input type="number" id="renewPaid" placeholder="السعر"></div></div>
     <button class="btn btn-primary btn-full" onclick="renewSub('${clientId}')">🔄 تجديد الاشتراك</button>
-    ${sub?`<div class="section-title">تسجيل مرتجع</div><div class="form-row"><div class="form-group"><label>المبلغ</label><input type="number" id="refAmt"></div><div class="form-group"><label>السبب</label><input type="text" id="refReason"></div></div><button class="btn btn-danger btn-full" onclick="addRefund('${clientId}','${sub.id}')">تسجيل مرتجع</button>`:''}
+    ${sub?`
+    <div class="section-title">تسجيل مرتجع</div>
+    <div class="form-row">
+      <div class="form-group"><label>المبلغ (جنيه)</label><input type="number" id="refAmt"></div>
+      <div class="form-group"><label>السبب</label><input type="text" id="refReason" placeholder="سبب المرتجع"></div>
+    </div>
+    <div class="form-group">
+      <label>المتابعات المتبقية (${sub.sessions_total - sub.sessions_used} متابعة)</label>
+      <select id="refEndSub" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-family:'Cairo',sans-serif;font-size:13px;">
+        <option value="keep">✅ تبقى كما هي - العميل يكمل متابعاته</option>
+        <option value="end">❌ إنهاء المتابعات وإلغاء الاشتراك</option>
+      </select>
+    </div>
+    <button class="btn btn-danger btn-full" onclick="addRefund('${clientId}','${sub.id}')">💰 تسجيل المرتجع</button>`:''}
   `;
 }
 
@@ -532,10 +545,51 @@ async function renewSub(clientId){
 }
 
 async function addRefund(clientId,subId){
-  const amount=parseFloat(document.getElementById('refAmt').value);const reason=document.getElementById('refReason').value;
+  const amount=parseFloat(document.getElementById('refAmt').value);
+  const reason=document.getElementById('refReason').value;
+  const endSub=document.getElementById('refEndSub')?.value;
   if(!amount){toast('أدخل المبلغ','#c62828');return;}
-  loading(true);await db.post('refunds',{client_id:clientId,subscription_id:subId,amount,reason});
-  loading(false);toast('تم تسجيل المرتجع ✅','#2e7d32');
+
+  // Show confirmation with sessions info
+  const subs=await db.get('subscriptions',`?id=eq.${subId}`);
+  const sub=subs[0];
+  const remaining=sub?(sub.sessions_total-sub.sessions_used):0;
+
+  const confirmed=await showConfirm(
+    'تأكيد المرتجع',
+    `مبلغ المرتجع: ${amount} جنيه\nالمتابعات المتبقية: ${remaining}\n\nهل تريد إنهاء المتابعات المتبقية؟`
+  );
+
+  // Ask about sessions separately
+  const endSessions = document.getElementById('refEndSub').value === 'end';
+
+  loading(true);
+  await db.post('refunds',{client_id:clientId,subscription_id:subId,amount,reason});
+
+  if(endSessions && sub){
+    // End the subscription immediately
+    await db.patch('subscriptions',subId,{
+      is_active:false,
+      sessions_total:sub.sessions_used // set total = used so no sessions remain
+    });
+    await db.post('notifications',{
+      client_id:clientId,
+      title:'💰 تم استرداد المبلغ',
+      message:`تم استرداد مبلغ ${amount} جنيه وإنهاء الاشتراك.\nالسبب: ${reason||'مرتجع'}`,
+      type:'warning'
+    });
+  } else {
+    await db.post('notifications',{
+      client_id:clientId,
+      title:'💰 تم استرداد مبلغ',
+      message:`تم استرداد مبلغ ${amount} جنيه.\nالسبب: ${reason||'مرتجع'}\nالمتابعات المتبقية: ${remaining}`,
+      type:'reminder'
+    });
+  }
+
+  loading(false);
+  toast('تم تسجيل المرتجع ✅','#2e7d32');
+  closeModal();
 }
 
 async function saveClientEdit(clientId){

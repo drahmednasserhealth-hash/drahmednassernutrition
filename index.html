@@ -465,45 +465,23 @@ async function doRegister() {
     const existing = await db.get('users', `?phone=eq.${encodeURIComponent(phone)}`);
     if (existing && existing.length) { showErr('regError','رقم الهاتف مسجل مسبقاً'); loading(false); return; }
 
-    const req = await db.post('subscription_requests', {
+    // فقط إضافة الطلب - الدكتور هو اللي يقبل أو يرفض
+    await db.post('subscription_requests', {
       name, phone, password, gender,
       birth_date: birth || null,
       height: height ? parseFloat(height) : null,
       weight: weight ? parseFloat(weight) : null,
       goal, activity_level: activity,
       address,
+      clinic_id: clinicId || null,
       package_id: packageId,
       payment_method: payMethod,
       payment_proof: paymentProofUrl,
       status: 'pending',
-      notes: `أمراض: ${selectedDiseases.join(',')} | حساسيات: ${selectedAllergies.join(',')}`
+      notes: selectedDiseases.length || selectedAllergies.length
+        ? `أمراض: ${selectedDiseases.join(',')} | حساسيات: ${selectedAllergies.join(',')}`
+        : null
     });
-
-    // Create user and client immediately
-    const userArr = await db.post('users', { name, phone, password, role: 'client', is_active: true });
-    if (userArr && userArr[0]) {
-      const userId = userArr[0].id;
-      const clientArr = await db.post('clients', {
-        user_id: userId,
-        clinic_id: clinicId || null,
-        name, phone, gender,
-        birth_date: birth || null,
-        address,
-        height: height ? parseFloat(height) : null,
-        first_weight: weight ? parseFloat(weight) : null,
-        goal, activity_level: activity,
-        subscription_approved: false
-      });
-      if (clientArr && clientArr[0]) {
-        const clientId = clientArr[0].id;
-        for (const did of selectedDiseases) {
-          await db.post('client_diseases', { client_id: clientId, disease_id: did });
-        }
-        for (const aid of selectedAllergies) {
-          await db.post('client_allergies', { client_id: clientId, allergy_id: aid });
-        }
-      }
-    }
 
     loading(false);
     document.getElementById('regError').style.display = 'none';
