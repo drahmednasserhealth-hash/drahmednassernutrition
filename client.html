@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام التغذية - العميل</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:#2e7d32; --primary-light:#4caf50; --primary-dark:#1b5e20;
+  --bg:#f1f8e9; --white:#fff; --text:#1a1a1a; --text-muted:#666;
+  --border:#e0e0e0; --error:#c62828; --warning:#f57f17;
+  --shadow:0 2px 12px rgba(46,125,50,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);min-height:100vh;}
+
+.app{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--primary);color:white;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar h2{font-size:16px;font-weight:700;}
+.content{flex:1;padding:16px;padding-bottom:80px;max-width:800px;margin:0 auto;width:100%;}
+
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 10px rgba(0,0,0,0.08);}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 2px;cursor:pointer;color:var(--text-muted);font-size:10px;font-weight:600;border:none;background:none;font-family:'Cairo',sans-serif;position:relative;transition:color .2s;}
+.nav-item.active{color:var(--primary);}
+.nav-item .icon{font-size:20px;margin-bottom:2px;}
+.nav-badge{position:absolute;top:4px;right:50%;transform:translateX(10px);background:#f44336;color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:16px;text-align:center;}
+
+.card{background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
+.card-title{font-size:15px;font-weight:700;color:var(--primary-dark);margin-bottom:12px;}
+
+.stat-card{background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:var(--shadow);}
+.stat-num{font-size:24px;font-weight:800;color:var(--primary);}
+.stat-label{font-size:11px;color:var(--text-muted);font-weight:600;margin-top:2px;}
+
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px;}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;
+  font-family:'Cairo',sans-serif;font-size:14px;color:var(--text);background:white;
+  transition:border-color .2s;outline:none;
+}
+.form-group input:focus{border-color:var(--primary);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.btn{padding:12px 20px;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-primary{background:var(--primary);color:white;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-outline{background:none;border:2px solid var(--primary);color:var(--primary);}
+.btn-full{width:100%;}
+.btn-sm{padding:7px 14px;font-size:12px;}
+
+.section-title{font-size:12px;font-weight:700;color:var(--primary);background:#e8f5e9;padding:7px 12px;border-radius:8px;margin:14px 0 10px;}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-active{background:#e8f5e9;color:#2e7d32;}
+.badge-expired{background:#ffebee;color:var(--error);}
+.badge-pending{background:#fff8e1;color:var(--warning);}
+
+.notif-item{display:flex;gap:12px;padding:12px;border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all .2s;}
+.notif-item.unread{background:#e8f5e9;}
+.notif-item.read{background:#f9f9f9;}
+.notif-icon{font-size:24px;flex-shrink:0;}
+.notif-body{flex:1;}
+.notif-title{font-size:13px;font-weight:700;color:var(--text);}
+.notif-msg{font-size:12px;color:var(--text-muted);margin-top:2px;white-space:pre-line;}
+.notif-time{font-size:10px;color:#aaa;margin-top:4px;}
+
+.meal-card{background:#f9f9f9;border-radius:12px;padding:12px;margin-bottom:8px;}
+.meal-name{font-size:14px;font-weight:700;color:var(--primary);}
+.meal-content{font-size:13px;color:#555;margin-top:4px;line-height:1.6;white-space:pre-line;}
+
+.day-tab{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;}
+.day-btn{padding:8px 14px;border:none;border-radius:20px;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;background:#f5f5f5;color:var(--text-muted);transition:all .2s;flex-shrink:0;}
+.day-btn.active{background:var(--primary);color:white;}
+
+.progress-bar{height:10px;background:#e8f5e9;border-radius:5px;margin-top:6px;}
+.progress-fill{height:100%;background:var(--primary);border-radius:5px;transition:width .5s;}
+
+.chat-msg{display:flex;margin-bottom:10px;}
+.chat-msg.sent{justify-content:flex-end;}
+.chat-msg.received{justify-content:flex-start;}
+.chat-bubble{max-width:72%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;}
+.chat-msg.sent .chat-bubble{background:var(--primary);color:white;}
+.chat-msg.received .chat-bubble{background:#f0f0f0;color:var(--text);}
+.chat-time{font-size:10px;opacity:.6;margin-top:4px;}
+
+.weight-entry{display:flex;align-items:center;gap:10px;padding:10px;background:#f9f9f9;border-radius:10px;margin-bottom:8px;}
+.weight-dot{width:12px;height:12px;border-radius:50%;background:var(--primary);flex-shrink:0;}
+
+.alt-food{background:#e8f5e9;padding:6px 12px;border-radius:20px;font-size:13px;display:inline-block;margin:3px;}
+.alt-main{font-weight:700;color:var(--primary-dark);}
+
+#loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,0.9);display:none;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:12px;}
+.spinner{width:36px;height:36px;border:4px solid #e8f5e9;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:500;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+
+.locked-overlay{text-align:center;padding:40px 20px;background:white;border-radius:16px;box-shadow:var(--shadow);}
+.locked-icon{font-size:48px;margin-bottom:12px;}
+
+@media(min-width:768px){.form-row{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--primary);font-weight:600;">جاري التحميل...</p></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+  <div class="topbar">
+    <span>🥗</span>
+    <h2 id="pageTitle">الرئيسية</h2>
+    <button onclick="logout()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:12px;">خروج</button>
+  </div>
+
+  <div class="content" id="mainContent"></div>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="showPage('home')" id="nav-home">
+      <span class="icon">🏠</span><span>الرئيسية</span>
+    </button>
+    <button class="nav-item" onclick="showPage('plan')" id="nav-plan">
+      <span class="icon">🥗</span><span>خطتي</span>
+    </button>
+    <button class="nav-item" onclick="showPage('measurements')" id="nav-measurements">
+      <span class="icon">📏</span><span>قياساتي</span>
+    </button>
+    <button class="nav-item" onclick="showPage('notifications')" id="nav-notifications">
+      <span class="icon">🔔</span><span>الإشعارات</span>
+      <span class="nav-badge" id="notifBadge" style="display:none">0</span>
+    </button>
+    <button class="nav-item" onclick="showPage('chat')" id="nav-chat">
+      <span class="icon">💬</span><span>الشات</span>
+      <span class="nav-badge" id="chatBadge" style="display:none">0</span>
+    </button>
+    <button class="nav-item" onclick="showPage('profile')" id="nav-profile">
+      <span class="icon">👤</span><span>حسابي</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+const SUPA_URL = 'https://fdrfrkwscuydtoozpviw.supabase.co';
+const SUPA_KEY = 'sb_publishable_nmy2xAvlJ4rGji1qYqjXbg_r6NFprBB';
+
+const user = JSON.parse(localStorage.getItem('user') || 'null');
+if (!user || user.role !== 'client') window.location.href = 'index.html';
+
+const db = {
+  async get(table, query='') {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}${query}`, {
+      headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}
+    });
+    if (!r.ok) return [];
+    return r.json();
+  },
+  async post(table, data) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
+      body:JSON.stringify(data)
+    });
+    return r.json();
+  },
+  async patch(table, id, data) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method:'PATCH',
+      headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
+      body:JSON.stringify(data)
+    });
+    return r.json();
+  }
+};
+
+const storage = {
+  async upload(bucket, path, file) {
+    await fetch(`${SUPA_URL}/storage/v1/object/${bucket}/${path}`, {
+      method:'POST',
+      headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`},
+      body:file
+    });
+    return `${SUPA_URL}/storage/v1/object/public/${bucket}/${path}`;
+  }
+};
+
+function loading(show) { document.getElementById('loadingOverlay').style.display = show?'flex':'none'; }
+
+function toast(msg, color='#333') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = color;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+function logout() { localStorage.removeItem('user'); window.location.href='index.html'; }
+
+function isSubActive(sub) {
+  if (!sub || !sub.is_active) return false;
+  return new Date() <= new Date(sub.end_date);
+}
+
+function canViewPlans(sub, client) {
+  if (!sub) return false;
+  return new Date() <= new Date(sub.end_date) && client.subscription_approved;
+}
+
+// ===== CLIENT DATA =====
+let clientData = null;
+let subData = null;
+
+async function initClientData() {
+  const clients = await db.get('clients', `?user_id=eq.${user.id}`);
+  clientData = clients[0];
+  if (!clientData) return;
+  const subs = await db.get('subscriptions', `?client_id=eq.${clientData.id}&is_active=eq.true&order=created_at.desc`);
+  subData = subs[0];
+
+  // Check notifications badge
+  const unread = await db.get('notifications', `?client_id=eq.${clientData.id}&is_read=eq.false`);
+  if (unread.length) {
+    document.getElementById('notifBadge').textContent = unread.length;
+    document.getElementById('notifBadge').style.display = 'block';
+  }
+
+  // Check unread chat
+  const unreadChat = await db.get('messages', `?client_id=eq.${clientData.id}&sender_role=eq.doctor&is_read=eq.false`);
+  if (unreadChat.length) {
+    document.getElementById('chatBadge').textContent = unreadChat.length;
+    document.getElementById('chatBadge').style.display = 'block';
+  }
+}
+
+// ===== NAVIGATION =====
+function showPage(page) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`nav-${page}`)?.classList.add('active');
+  const titles = {home:'الرئيسية',plan:'خطتي الغذائية',measurements:'قياساتي',notifications:'الإشعارات',chat:'محادثة الدكتور',profile:'حسابي'};
+  document.getElementById('pageTitle').textContent = titles[page]||page;
+  document.getElementById('mainContent').innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;">جاري التحميل...</div>';
+  pages[page]?.();
+}
+
+const pages = {
+  home: loadHome,
+  plan: loadPlan,
+  measurements: loadMeasurements,
+  notifications: loadNotifications,
+  chat: loadChat,
+  profile: loadProfile,
+};
+
+// ===== HOME PAGE =====
+async function loadHome() {
+  if (!clientData) await initClientData();
+  const client = clientData;
+  if (!client) { document.getElementById('mainContent').innerHTML = '<p style="text-align:center;padding:40px;color:#aaa;">لم يتم العثور على بياناتك</p>'; return; }
+
+  const visits = await db.get('visits', `?client_id=eq.${client.id}&order=visit_date.asc`);
+  const weightVisits = visits.filter(v=>v.weight);
+  const currentWeight = weightVisits.length ? weightVisits[weightVisits.length-1].weight : client.first_weight;
+  const firstWeight = client.first_weight || weightVisits[0]?.weight;
+  const diff = currentWeight && firstWeight ? (currentWeight - firstWeight).toFixed(1) : null;
+  const bmi = currentWeight && client.height ? (currentWeight/((client.height/100)**2)).toFixed(1) : null;
+
+  function bmiLabel(b) {
+    b = parseFloat(b);
+    if (b<18.5) return {text:'نحيف',color:'#1565c0'};
+    if (b<25) return {text:'طبيعي',color:'#2e7d32'};
+    if (b<30) return {text:'زيادة وزن',color:'#e65100'};
+    return {text:'سمنة',color:'#c62828'};
+  }
+  const bmiInfo = bmi ? bmiLabel(bmi) : null;
+
+  const sub = subData;
+  const active = sub && isSubActive(sub);
+  let daysLeft = 0;
+  let sessionsLeft = 0;
+  if (sub) {
+    daysLeft = Math.max(0, Math.ceil((new Date(sub.end_date) - new Date()) / 864e5));
+    sessionsLeft = Math.max(0, sub.sessions_total - sub.sessions_used);
+  }
+
+  // Last visit and next visit
+  const lastVisit = visits.length ? visits[visits.length-1] : null;
+  const nextVisit = lastVisit?.next_visit_date;
+
+  // Get daily tip
+  const [settings, clinic] = await Promise.all([
+    db.get('doctor_settings',''),
+    client.clinic_id ? db.get('clinics',`?id=eq.${client.clinic_id}`) : Promise.resolve([])
+  ]);
+  const dailyTip = settings[0]?.daily_tip;
+  const clinicName = clinic[0]?.name;
+
+  document.getElementById('mainContent').innerHTML = `
+    <!-- Welcome -->
+    <div class="card" style="background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;margin-bottom:12px;">
+      <div style="font-size:13px;opacity:.8;">مرحباً 👋</div>
+      <div style="font-size:20px;font-weight:800;margin-top:2px;">${client.name}</div>
+      ${clinicName?`<div style="font-size:12px;opacity:.7;margin-top:4px;">📍 ${clinicName}</div>`:''}
+      ${active
+        ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+            <span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px;">⏳ ${daysLeft} يوم متبقي</span>
+            <span style="background:rgba(255,255,255,0.2);padding:4px 12px;border-radius:20px;font-size:12px;">📅 ${sessionsLeft} جلسة متبقية</span>
+           </div>`
+        : `<div style="margin-top:8px;background:rgba(255,100,100,0.3);padding:6px 12px;border-radius:10px;font-size:12px;">⚠️ ${!sub?'لا يوجد اشتراك نشط':'انتهى اشتراكك'}</div>`
+      }
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+      <div class="stat-card">
+        <div class="stat-num" style="font-size:20px;">${currentWeight||'-'}</div>
+        <div class="stat-label">الوزن الحالي</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="font-size:20px;${diff&&parseFloat(diff)<0?'color:#2e7d32':'color:#e65100'}">${diff?`${parseFloat(diff)>0?'+':''}${diff}`:'-'}</div>
+        <div class="stat-label">التغيير</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="font-size:20px;${bmiInfo?`color:${bmiInfo.color}`:''};">${bmi||'-'}</div>
+        <div class="stat-label">BMI ${bmiInfo?bmiInfo.text:''}</div>
+      </div>
+    </div>
+
+    <!-- Next Visit -->
+    ${nextVisit ? `
+    <div class="card" style="border-right:4px solid var(--primary);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:24px;">📅</span>
+        <div>
+          <div style="font-size:13px;color:var(--text-muted);">موعد الزيارة القادمة</div>
+          <div style="font-size:16px;font-weight:800;color:var(--primary);">${nextVisit}</div>
+        </div>
+      </div>
+    </div>` : ''}
+
+    <!-- Quick Actions -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <button class="card" onclick="showPage('plan')" style="border:none;cursor:pointer;text-align:center;padding:16px;">
+        <div style="font-size:28px;">🥗</div>
+        <div style="font-weight:700;font-size:13px;margin-top:4px;">خطتي الغذائية</div>
+      </button>
+      <button class="card" onclick="showPage('measurements')" style="border:none;cursor:pointer;text-align:center;padding:16px;">
+        <div style="font-size:28px;">📊</div>
+        <div style="font-weight:700;font-size:13px;margin-top:4px;">متابعة الوزن</div>
+      </button>
+      <button class="card" onclick="showPage('chat')" style="border:none;cursor:pointer;text-align:center;padding:16px;">
+        <div style="font-size:28px;">💬</div>
+        <div style="font-weight:700;font-size:13px;margin-top:4px;">محادثة الدكتور</div>
+      </button>
+      <button class="card" onclick="showFoodAlternatives()" style="border:none;cursor:pointer;text-align:center;padding:16px;">
+        <div style="font-size:28px;">🔄</div>
+        <div style="font-weight:700;font-size:13px;margin-top:4px;">بدائل الأكل</div>
+      </button>
+    </div>
+
+    <!-- Daily Tip -->
+    ${dailyTip ? `
+    <div class="card" style="background:#fff8e1;border-right:4px solid #ffc107;">
+      <div style="font-size:14px;font-weight:700;color:#e65100;margin-bottom:6px;">💡 نصيحة اليوم</div>
+      <div style="font-size:13px;color:#555;line-height:1.6;">${dailyTip}</div>
+    </div>` : ''}
+
+    <!-- Weight Progress Chart -->
+    ${weightVisits.length >= 2 ? `
+    <div class="card">
+      <div class="card-title">📈 تقدم الوزن</div>
+      <div id="weightChart"></div>
+    </div>` : ''}
+  `;
+
+  // Draw simple weight chart
+  if (weightVisits.length >= 2) {
+    const last6 = weightVisits.slice(-6);
+    const maxW = Math.max(...last6.map(v=>v.weight));
+    const minW = Math.min(...last6.map(v=>v.weight));
+    const range = maxW - minW || 1;
+    document.getElementById('weightChart').innerHTML = `
+      <div style="display:flex;align-items:flex-end;gap:6px;height:80px;padding:0 4px;">
+        ${last6.map(v=>{
+          const pct = ((v.weight-minW)/range*70+10);
+          const isLast = v===last6[last6.length-1];
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <div style="font-size:9px;color:${isLast?'var(--primary)':'#aaa'};font-weight:700;">${v.weight}</div>
+            <div style="width:100%;height:${pct}px;background:${isLast?'var(--primary)':'#c8e6c9'};border-radius:4px 4px 0 0;min-height:10px;"></div>
+            <div style="font-size:8px;color:#aaa;">${v.visit_date?.substring(5)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  }
+}
+
+// ===== PLAN PAGE =====
+async function loadPlan() {
+  if (!clientData) await initClientData();
+  const client = clientData;
+  const sub = subData;
+
+  if (!client?.subscription_approved || !sub || !canViewPlans(sub, client)) {
+    document.getElementById('mainContent').innerHTML = `
+      <div class="locked-overlay">
+        <div class="locked-icon">🔒</div>
+        <div style="font-size:16px;font-weight:800;margin-bottom:8px;">الخطة الغذائية غير متاحة</div>
+        <div style="font-size:13px;color:var(--text-muted);">يجب أن يكون لديك اشتراك نشط لعرض خطتك الغذائية</div>
+      </div>
+    `;
+    return;
+  }
+
+  // Get last visit with a plan
+  const visits = await db.get('visits', `?client_id=eq.${client.id}&diet_plan_id=not.is.null&order=visit_date.desc`);
+  const lastVisit = visits[0];
+
+  if (!lastVisit?.diet_plan_id) {
+    document.getElementById('mainContent').innerHTML = `
+      <div class="locked-overlay">
+        <div class="locked-icon">📋</div>
+        <div style="font-size:16px;font-weight:800;margin-bottom:8px;">لم يتم تحديد خطة بعد</div>
+        <div style="font-size:13px;color:var(--text-muted);">سيقوم الدكتور بتحديد خطتك الغذائية في الزيارة القادمة</div>
+      </div>
+    `;
+    return;
+  }
+
+  loading(true);
+  const [plans, days] = await Promise.all([
+    db.get('diet_plans', `?id=eq.${lastVisit.diet_plan_id}`),
+    db.get('diet_plan_days', `?plan_id=eq.${lastVisit.diet_plan_id}&order=day_number`)
+  ]);
+  const plan = plans[0];
+  if (!plan) { loading(false); return; }
+
+  const meals = days.length ? await db.get('diet_plan_meals', `?day_id=in.(${days.map(d=>d.id).join(',')})`) : [];
+  const mealsByDay = {};
+  days.forEach(d => {
+    mealsByDay[d.id] = meals.filter(m=>m.day_id===d.id).sort((a,b)=>a.meal_order-b.meal_order);
+  });
+
+  // Get food alternatives for this plan
+  const allAlts = await db.get('food_alternatives', '');
+  loading(false);
+
+  // Determine today's day in the plan
+  const startDate = new Date(lastVisit.visit_date);
+  const todayIndex = Math.min(Math.floor((new Date()-startDate)/864e5), days.length-1);
+  let selectedDay = Math.max(0, todayIndex);
+
+  function renderDay(dayIdx) {
+    const day = days[dayIdx];
+    if (!day) return '';
+    const dayMeals = mealsByDay[day.id] || [];
+    return dayMeals.map(meal => {
+      // Find alternatives for items in this meal
+      const mealWords = meal.content.split(/\s+|-|،|,/);
+      const foundAlts = allAlts.filter(a => mealWords.some(w=>w.length>2&&a.food_name.includes(w)));
+      return `
+        <div class="meal-card">
+          <div class="meal-name">🍽️ ${meal.meal_name}</div>
+          <div class="meal-content">${meal.content}</div>
+          ${foundAlts.length ? `
+            <div style="margin-top:8px;">
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:4px;">🔄 بدائل متاحة:</div>
+              ${foundAlts.map(a=>`<span class="alt-food"><span class="alt-main">${a.food_name}</span> → ${a.alternatives}</span>`).join('')}
+            </div>
+          `:''}
+        </div>
+      `;
+    }).join('') || '<p style="text-align:center;color:#aaa;padding:16px;">لا توجد وجبات لهذا اليوم</p>';
+  }
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="card" style="background:linear-gradient(135deg,var(--primary-dark),var(--primary));color:white;">
+      <div style="font-size:11px;opacity:.7;">خطتك الغذائية</div>
+      <div style="font-size:18px;font-weight:800;margin-top:2px;">${plan.name}</div>
+      <div style="display:flex;gap:12px;margin-top:8px;font-size:12px;opacity:.85;">
+        <span>🔥 ${plan.calories} سعر</span>
+        <span>📅 ${plan.days_count} أيام</span>
+        <span>📍 اليوم ${todayIndex+1} من ${plan.days_count}</span>
+      </div>
+      <div class="progress-bar" style="margin-top:10px;background:rgba(255,255,255,0.3);">
+        <div class="progress-fill" style="width:${((todayIndex+1)/plan.days_count*100).toFixed(0)}%;background:white;"></div>
+      </div>
+    </div>
+
+    <div class="day-tab" id="dayTabs">
+      ${days.map((d,i)=>`
+        <button class="day-btn ${i===selectedDay?'active':''}" onclick="selectPlanDay(${i},this)">${i===todayIndex?'اليوم':'يوم '+d.day_number}</button>
+      `).join('')}
+    </div>
+
+    <div id="planMeals">${renderDay(selectedDay)}</div>
+  `;
+
+  window._planDays = days;
+  window._renderPlanDay = renderDay;
+}
+
+function selectPlanDay(idx, btn) {
+  document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('planMeals').innerHTML = window._renderPlanDay(idx);
+}
+
+// ===== MEASUREMENTS PAGE =====
+async function loadMeasurements() {
+  if (!clientData) await initClientData();
+  const client = clientData;
+  if (!client) return;
+
+  const [visits, bodyMs] = await Promise.all([
+    db.get('visits', `?client_id=eq.${client.id}&order=visit_date.asc`),
+    db.get('body_measurements', `?client_id=eq.${client.id}&order=measured_at.desc`)
+  ]);
+
+  const weightVisits = visits.filter(v=>v.weight);
+  const currentWeight = weightVisits.length ? weightVisits[weightVisits.length-1].weight : client.first_weight;
+  const firstWeight = client.first_weight || weightVisits[0]?.weight;
+  const totalDiff = currentWeight && firstWeight ? (currentWeight - firstWeight).toFixed(1) : null;
+
+  // Calculate calories
+  const age = client.birth_date ? Math.floor((new Date()-new Date(client.birth_date))/3.156e10) : 25;
+  const w = currentWeight || 70;
+  const h = client.height || 170;
+  const bmr = client.gender==='male' ? 10*w+6.25*h-5*age+5 : 10*w+6.25*h-5*age-161;
+  const actMultiplier = {sedentary:1.2,light:1.375,moderate:1.55,active:1.725,very_active:1.9}[client.activity_level]||1.55;
+  const tdee = Math.round(bmr * actMultiplier);
+  const targetCals = client.goal==='lose' ? tdee-500 : client.goal==='gain' ? tdee+500 : tdee;
+
+  document.getElementById('mainContent').innerHTML = `
+    <!-- Weight Summary -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+      <div class="stat-card">
+        <div class="stat-num" style="font-size:18px;">${currentWeight||'-'}</div>
+        <div class="stat-label">الوزن الحالي</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="font-size:18px;${totalDiff&&parseFloat(totalDiff)<0?'color:#2e7d32':'color:#e65100'}">${totalDiff?`${parseFloat(totalDiff)>0?'+':''}${totalDiff}`:'-'}</div>
+        <div class="stat-label">إجمالي التغيير</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="font-size:18px;">${firstWeight||'-'}</div>
+        <div class="stat-label">الوزن الأول</div>
+      </div>
+    </div>
+
+    <!-- Calories Calculator -->
+    <div class="card" style="background:#fff3e0;border-right:4px solid #ff8f00;">
+      <div class="card-title" style="color:#e65100;">🔥 احتياجاتك اليومية</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+        <div>السعرات الأساسية (BMR): <strong>${Math.round(bmr)}</strong></div>
+        <div>السعرات اليومية (TDEE): <strong>${tdee}</strong></div>
+        <div>هدفك: <strong style="color:var(--primary)">${targetCals} سعر</strong></div>
+        <div>الهدف: <strong>${client.goal==='lose'?'إنقاص الوزن':client.goal==='gain'?'زيادة الوزن':'تثبيت الوزن'}</strong></div>
+      </div>
+    </div>
+
+    <!-- Log Weight -->
+    <div class="card">
+      <div class="card-title">⚖️ تسجيل وزن اليوم</div>
+      <div style="display:flex;gap:8px;">
+        <input type="number" id="todayWeight" placeholder="الوزن بالكيلو" step="0.1" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;outline:none;">
+        <button class="btn btn-primary" onclick="logWeight()">تسجيل</button>
+      </div>
+    </div>
+
+    <!-- Weight History -->
+    <div class="card">
+      <div class="card-title">📋 سجل الوزن</div>
+      ${weightVisits.slice().reverse().map((v,i,arr)=>{
+        const prev = arr[i+1];
+        const d = prev && v.weight && prev.weight ? (v.weight - prev.weight).toFixed(1) : null;
+        return `<div class="weight-entry">
+          <div class="weight-dot" style="background:${d&&parseFloat(d)<0?'var(--primary)':d&&parseFloat(d)>0?'#e65100':'#aaa'}"></div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">${v.weight} كجم</div>
+            <div style="font-size:11px;color:#aaa;">${v.visit_date}</div>
+          </div>
+          ${d?`<span style="font-size:13px;font-weight:700;color:${parseFloat(d)<0?'#2e7d32':'#e65100'}">${parseFloat(d)>0?'+':''}${d}</span>`:''}
+        </div>`;
+      }).join('')||'<p style="text-align:center;color:#aaa;padding:16px;">لا يوجد سجل وزن</p>'}
+    </div>
+
+    <!-- Body Measurements -->
+    <div class="card">
+      <div class="card-title">📏 القياسات الجسمية</div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">تسجيل قياسات جديدة</div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:8px;"><label>الخصر (سم)</label><input type="number" id="mWaist" placeholder="0" step="0.5"></div>
+          <div class="form-group" style="margin-bottom:8px;"><label>الأرداف (سم)</label><input type="number" id="mHips" placeholder="0" step="0.5"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:8px;"><label>الذراع (سم)</label><input type="number" id="mArms" placeholder="0" step="0.5"></div>
+          <div class="form-group" style="margin-bottom:8px;"><label>الفخذ (سم)</label><input type="number" id="mThighs" placeholder="0" step="0.5"></div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="logMeasurements()">💾 حفظ القياسات</button>
+      </div>
+      ${bodyMs.length ? `
+        <div class="section-title">السجل السابق</div>
+        ${bodyMs.slice(0,3).map(m=>`
+          <div style="background:#f9f9f9;padding:10px;border-radius:10px;margin-bottom:6px;font-size:12px;">
+            <div style="font-weight:700;margin-bottom:4px;">${m.measured_at}</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              ${m.waist?`<span>خصر: ${m.waist}</span>`:''}
+              ${m.hips?`<span>أرداف: ${m.hips}</span>`:''}
+              ${m.arms?`<span>ذراع: ${m.arms}</span>`:''}
+              ${m.thighs?`<span>فخذ: ${m.thighs}</span>`:''}
+            </div>
+          </div>
+        `).join('')}
+      `:''}
+    </div>
+
+    <!-- Photos -->
+    <div class="card">
+      <div class="card-title">📸 صور المتابعة</div>
+      <div class="form-row" style="margin-bottom:8px;">
+        <select id="selfPhotoType" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;">
+          <option value="progress">تقدم</option>
+          <option value="before">قبل</option>
+          <option value="after">بعد</option>
+        </select>
+        <input type="file" id="selfPhoto" accept="image/*">
+      </div>
+      <button class="btn btn-outline btn-full" onclick="uploadSelfPhoto()">رفع صورة</button>
+      <div id="clientPhotos" style="margin-top:12px;">جاري التحميل...</div>
+    </div>
+  `;
+
+  loadClientSelfPhotos();
+}
+
+async function logWeight() {
+  const w = parseFloat(document.getElementById('todayWeight').value);
+  if (!w) { toast('أدخل الوزن','#c62828'); return; }
+  loading(true);
+  await db.post('visits', {
+    client_id: clientData.id,
+    visit_date: new Date().toISOString().split('T')[0],
+    weight: w,
+    notes: 'تسجيل ذاتي'
+  });
+  loading(false);
+  toast('تم تسجيل الوزن ✅','#2e7d32');
+  loadMeasurements();
+}
+
+async function logMeasurements() {
+  const waist = parseFloat(document.getElementById('mWaist').value)||null;
+  const hips = parseFloat(document.getElementById('mHips').value)||null;
+  const arms = parseFloat(document.getElementById('mArms').value)||null;
+  const thighs = parseFloat(document.getElementById('mThighs').value)||null;
+  if (!waist && !hips && !arms && !thighs) { toast('أدخل قياساً واحداً على الأقل','#c62828'); return; }
+  loading(true);
+  await db.post('body_measurements', {
+    client_id: clientData.id,
+    measured_by: 'client',
+    waist, hips, arms, thighs,
+    measured_at: new Date().toISOString().split('T')[0]
+  });
+  loading(false);
+  toast('تم حفظ القياسات ✅','#2e7d32');
+  loadMeasurements();
+}
+
+async function loadClientSelfPhotos() {
+  const photos = await db.get('client_photos', `?client_id=eq.${clientData.id}&order=created_at.desc`);
+  const el = document.getElementById('clientPhotos');
+  if (!el) return;
+  const typeLabels = {before:'قبل',after:'بعد',progress:'تقدم'};
+  el.innerHTML = photos.length ? `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+      ${photos.map(p=>`<div style="text-align:center;">
+        <img src="${p.photo_url}" style="width:100%;border-radius:8px;aspect-ratio:1;object-fit:cover;">
+        <div style="font-size:10px;color:#aaa;margin-top:2px;">${typeLabels[p.photo_type]||''}</div>
+      </div>`).join('')}
+    </div>` : '<p style="text-align:center;color:#aaa;padding:16px;">لا توجد صور</p>';
+}
+
+async function uploadSelfPhoto() {
+  const file = document.getElementById('selfPhoto').files[0];
+  const type = document.getElementById('selfPhotoType').value;
+  if (!file) { toast('اختر صورة','#c62828'); return; }
+  loading(true);
+  const url = await storage.upload('nutrition', `clients/${clientData.id}/${Date.now()}-${file.name}`, file);
+  await db.post('client_photos', {client_id:clientData.id,photo_url:url,photo_type:type});
+  loading(false);
+  toast('تم رفع الصورة ✅','#2e7d32');
+  loadClientSelfPhotos();
+}
+
+// ===== NOTIFICATIONS PAGE =====
+async function loadNotifications() {
+  if (!clientData) await initClientData();
+  const notifs = await db.get('notifications', `?client_id=eq.${clientData.id}&order=created_at.desc`);
+
+  // Mark all as read
+  const unread = notifs.filter(n=>!n.is_read);
+  for (const n of unread) await db.patch('notifications', n.id, {is_read:true});
+  document.getElementById('notifBadge').style.display = 'none';
+
+  const typeIcons = {reminder:'🔔',motivation:'💪',celebration:'🎉',offer:'🎁',warning:'⚠️',reminder_labs:'🔬',reminder_meds:'💊'};
+
+  document.getElementById('mainContent').innerHTML = notifs.length ? `
+    <div>
+      ${notifs.map(n=>`
+        <div class="notif-item ${n.is_read?'read':'unread'}">
+          <div class="notif-icon">${typeIcons[n.type]||'📬'}</div>
+          <div class="notif-body">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-msg">${n.message}</div>
+            <div class="notif-time">${new Date(n.created_at).toLocaleDateString('ar',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  ` : `<div class="locked-overlay"><div class="locked-icon">🔔</div><div style="font-size:14px;color:#aaa;">لا توجد إشعارات</div></div>`;
+}
+
+// ===== CHAT PAGE =====
+let chatPollInterval;
+async function loadChat() {
+  if (!clientData) await initClientData();
+  clearInterval(chatPollInterval);
+
+  // Mark unread as read
+  const unread = await db.get('messages', `?client_id=eq.${clientData.id}&sender_role=eq.doctor&is_read=eq.false`);
+  for (const m of unread) await db.patch('messages', m.id, {is_read:true});
+  document.getElementById('chatBadge').style.display = 'none';
+
+  document.getElementById('mainContent').innerHTML = `
+    <div style="display:flex;flex-direction:column;height:calc(100vh-140px);">
+      <div id="chatMessages" style="flex:1;overflow-y:auto;min-height:300px;max-height:calc(100vh - 260px);padding:4px;"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;position:sticky;bottom:0;background:var(--bg);padding-top:8px;">
+        <input type="text" id="chatInput" placeholder="اكتب رسالة للدكتور..." style="flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;font-family:'Cairo',sans-serif;font-size:14px;outline:none;" onkeydown="if(event.key==='Enter')sendClientMessage()">
+        <input type="file" id="chatFile" accept="image/*,.pdf" style="display:none;" onchange="sendClientFile()">
+        <button onclick="document.getElementById('chatFile').click()" style="background:white;border:1.5px solid var(--border);padding:10px 14px;border-radius:12px;cursor:pointer;font-size:16px;">📎</button>
+        <button onclick="sendClientMessage()" class="btn btn-primary">إرسال</button>
+      </div>
+    </div>
+  `;
+
+  await refreshChatMessages();
+  chatPollInterval = setInterval(refreshChatMessages, 5000);
+}
+
+async function refreshChatMessages() {
+  const msgs = await db.get('messages', `?client_id=eq.${clientData.id}&order=created_at.asc`);
+  const container = document.getElementById('chatMessages');
+  if (!container) { clearInterval(chatPollInterval); return; }
+  container.innerHTML = msgs.length ? msgs.map(m=>`
+    <div class="chat-msg ${m.sender_role==='client'?'sent':'received'}">
+      <div class="chat-bubble">
+        ${m.message?`<div>${m.message}</div>`:''}
+        ${m.file_url?`<a href="${m.file_url}" target="_blank"><img src="${m.file_url}" style="max-width:200px;border-radius:8px;margin-top:4px;"></a>`:''}
+        <div class="chat-time">${new Date(m.created_at).toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+    </div>
+  `).join('') : '<div style="text-align:center;padding:40px;color:#aaa;">ابدأ المحادثة مع الدكتور 👋</div>';
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendClientMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  await db.post('messages', {client_id:clientData.id, sender_role:'client', message:text, is_read:false});
+  refreshChatMessages();
+}
+
+async function sendClientFile() {
+  const file = document.getElementById('chatFile').files[0];
+  if (!file) return;
+  loading(true);
+  const url = await storage.upload('nutrition', `chat/${clientData.id}/${Date.now()}-${file.name}`, file);
+  await db.post('messages', {client_id:clientData.id, sender_role:'client', file_url:url, file_type:file.type.includes('pdf')?'pdf':'image', is_read:false});
+  loading(false);
+  refreshChatMessages();
+}
+
+// ===== FOOD ALTERNATIVES =====
+async function showFoodAlternatives() {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('pageTitle').textContent = 'البدائل الغذائية';
+  const [alts, cats] = await Promise.all([
+    db.get('food_alternatives', '?order=food_name'),
+    db.get('food_alt_categories', '?order=name')
+  ]);
+  const catMap={}; cats.forEach(c=>catMap[c.id]=c.name);
+  const grouped={};
+  alts.forEach(a=>{
+    const cat = catMap[a.category_id]||'أخرى';
+    if(!grouped[cat]) grouped[cat]=[];
+    grouped[cat].push(a);
+  });
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="form-group">
+      <input type="text" id="altSearch" class="search-input" placeholder="🔍 ابحث عن طعام..." oninput="filterAlts(this.value)" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;font-family:'Cairo',sans-serif;font-size:14px;outline:none;">
+    </div>
+    <div id="altsList">
+      ${Object.entries(grouped).map(([cat,items])=>`
+        <div class="section-title">${cat}</div>
+        ${items.map(a=>`
+          <div class="alt-item" style="background:white;border-radius:12px;padding:12px;margin-bottom:6px;box-shadow:var(--shadow);">
+            <div style="font-size:14px;font-weight:700;color:var(--primary-dark);margin-bottom:6px;">🍽️ ${a.food_name}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;">
+              ${a.alternatives.split('-').map(alt=>`<span class="alt-food">${alt.trim()}</span>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      `).join('')||'<p style="text-align:center;color:#aaa;padding:30px;">لا توجد بدائل مسجلة</p>'}
+    </div>
+  `;
+}
+
+function filterAlts(q) {
+  document.querySelectorAll('.alt-item').forEach(el=>{
+    el.style.display = el.textContent.toLowerCase().includes(q.toLowerCase()) ? 'block' : 'none';
+  });
+}
+
+// ===== PROFILE PAGE =====
+async function loadProfile() {
+  if (!clientData) await initClientData();
+  const client = clientData;
+  const sub = subData;
+  if (!client) return;
+
+  const [diseases, allergies, allDiseases, allAllergies, visits, labs, meds] = await Promise.all([
+    db.get('client_diseases', `?client_id=eq.${client.id}`),
+    db.get('client_allergies', `?client_id=eq.${client.id}`),
+    db.get('chronic_diseases',''),
+    db.get('food_allergies',''),
+    db.get('visits',`?client_id=eq.${client.id}&order=visit_date.desc`),
+    db.get('client_lab_requests',`?client_id=eq.${client.id}&status=eq.pending`),
+    db.get('client_medication_requests',`?client_id=eq.${client.id}&status=eq.pending`)
+  ]);
+
+  const dMap={}; allDiseases.forEach(d=>dMap[d.id]=d.name);
+  const aMap={}; allAllergies.forEach(a=>aMap[a.id]=a.name);
+
+  const age = client.birth_date ? Math.floor((new Date()-new Date(client.birth_date))/3.156e10) : null;
+  const weightVisits = visits.filter(v=>v.weight);
+  const currentWeight = weightVisits.length ? weightVisits[0].weight : client.first_weight;
+
+  document.getElementById('mainContent').innerHTML = `
+    <!-- Profile Header -->
+    <div class="card" style="text-align:center;padding:24px;">
+      <div style="width:72px;height:72px;border-radius:50%;background:var(--primary);color:white;font-size:28px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">${client.name.charAt(0)}</div>
+      <div style="font-size:20px;font-weight:800;">${client.name}</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">${client.phone||''}</div>
+      ${sub?`<span class="badge ${new Date()<=new Date(sub.end_date)?'badge-active':'badge-expired'}" style="margin-top:8px;">${new Date()<=new Date(sub.end_date)?'اشتراك نشط':'اشتراك منتهي'}</span>`:'<span class="badge badge-expired" style="margin-top:8px;">لا يوجد اشتراك</span>'}
+    </div>
+
+    <!-- Bio Info -->
+    <div class="card">
+      <div class="card-title">📋 المعلومات الشخصية</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
+        <div>🎂 العمر: <strong>${age?age+' سنة':'-'}</strong></div>
+        <div>📏 الطول: <strong>${client.height?client.height+' سم':'-'}</strong></div>
+        <div>⚖️ الوزن الحالي: <strong>${currentWeight?currentWeight+' كجم':'-'}</strong></div>
+        <div>🎯 الهدف: <strong>${client.goal==='lose'?'إنقاص':client.goal==='gain'?'زيادة':'تثبيت'}</strong></div>
+        <div>📍 العنوان: <strong>${client.address||'-'}</strong></div>
+        <div>👤 الجنس: <strong>${client.gender==='male'?'ذكر':'أنثى'}</strong></div>
+      </div>
+    </div>
+
+    <!-- Subscription -->
+    ${sub?`
+    <div class="card">
+      <div class="card-title">🗓️ الاشتراك</div>
+      <div style="font-size:13px;">
+        <div style="margin-bottom:6px;">من <strong>${sub.start_date}</strong> إلى <strong>${sub.end_date}</strong></div>
+        <div style="margin-bottom:6px;">الجلسات: <strong>${sub.sessions_used}</strong> مستخدمة من <strong>${sub.sessions_total}</strong></div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:${(sub.sessions_used/sub.sessions_total*100).toFixed(0)}%"></div>
+        </div>
+      </div>
+    </div>`:''}
+
+    <!-- Medical -->
+    ${diseases.length?`
+    <div class="card">
+      <div class="card-title">🏥 الأمراض المزمنة</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${diseases.map(d=>`<span class="badge badge-pending">${dMap[d.disease_id]||'-'}</span>`).join('')}
+      </div>
+    </div>`:''}
+
+    ${allergies.length?`
+    <div class="card">
+      <div class="card-title">⚠️ الحساسيات الغذائية</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${allergies.map(a=>`<span class="badge badge-expired">${aMap[a.allergy_id]||'-'}</span>`).join('')}
+      </div>
+    </div>`:''}
+
+    <!-- Pending Labs and Meds -->
+    ${labs.length?`
+    <div class="card" style="border-right:4px solid #1565c0;">
+      <div class="card-title" style="color:#1565c0;">🔬 تحاليل مطلوبة</div>
+      <div style="font-size:13px;color:#555;">${labs.map(l=>`<div style="padding:4px 0;border-bottom:1px solid #f0f0f0;">• ${l.notes||'تحليل'}</div>`).join('')}</div>
+    </div>`:''}
+
+    ${meds.length?`
+    <div class="card" style="border-right:4px solid var(--primary);">
+      <div class="card-title" style="color:var(--primary);">💊 أدوية موصوفة</div>
+      <div style="font-size:13px;color:#555;">${meds.map(m=>`<div style="padding:4px 0;border-bottom:1px solid #f0f0f0;">• ${m.dosage||'دواء'}</div>`).join('')}</div>
+    </div>`:''}
+
+    <!-- Change Password -->
+    <div class="card">
+      <div class="card-title">🔒 تغيير كلمة المرور</div>
+      <div class="form-group"><label>كلمة المرور الجديدة</label><input type="password" id="newPass" placeholder="6 أحرف على الأقل"></div>
+      <button class="btn btn-outline btn-full" onclick="changeMyPassword()">تغيير</button>
+    </div>
+  `;
+}
+
+async function changeMyPassword() {
+  const p = document.getElementById('newPass').value;
+  if (p.length < 6) { toast('كلمة المرور 6 أحرف على الأقل','#c62828'); return; }
+  loading(true);
+  await db.patch('users', user.id, {password:p});
+  loading(false);
+  toast('تم تغيير كلمة المرور ✅','#2e7d32');
+}
+
+// ===== INIT =====
+initClientData().then(()=>{
+  showPage('home');
+});
+</script>
+</body>
+</html>

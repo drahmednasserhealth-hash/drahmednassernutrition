@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام متابعة التغذية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #2e7d32;
+    --primary-light: #4caf50;
+    --primary-dark: #1b5e20;
+    --bg: #f1f8e9;
+    --white: #ffffff;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --border: #e0e0e0;
+    --error: #c62828;
+    --shadow: 0 4px 20px rgba(46,125,50,0.15);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Cairo',sans-serif; background:var(--bg); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+
+  .container { width:100%; max-width:460px; }
+
+  .logo-area { text-align:center; margin-bottom:32px; }
+  .logo-icon { width:70px; height:70px; background:var(--primary); border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:32px; }
+  .logo-area h1 { color:var(--primary-dark); font-size:22px; font-weight:800; }
+  .logo-area p { color:var(--text-muted); font-size:13px; margin-top:4px; }
+
+  .card { background:var(--white); border-radius:20px; padding:32px; box-shadow:var(--shadow); }
+
+  .tabs { display:flex; gap:8px; margin-bottom:28px; background:#f5f5f5; padding:6px; border-radius:12px; }
+  .tab { flex:1; padding:10px; text-align:center; border:none; background:none; border-radius:8px; font-family:'Cairo',sans-serif; font-size:14px; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all .2s; }
+  .tab.active { background:var(--white); color:var(--primary); box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+
+  .form-group { margin-bottom:16px; }
+  .form-group label { display:block; font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px;
+    font-family:'Cairo',sans-serif; font-size:14px; color:var(--text);
+    background:var(--white); transition:border-color .2s; outline:none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color:var(--primary); }
+  .form-group textarea { resize:vertical; min-height:80px; }
+
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .btn { width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-family:'Cairo',sans-serif; font-size:16px; font-weight:700; cursor:pointer; transition:all .2s; margin-top:8px; }
+  .btn:hover { background:var(--primary-dark); transform:translateY(-1px); }
+  .btn:active { transform:translateY(0); }
+  .btn:disabled { background:#ccc; cursor:not-allowed; transform:none; }
+
+  .section-title { font-size:13px; font-weight:700; color:var(--primary); background:#e8f5e9; padding:8px 12px; border-radius:8px; margin:20px 0 12px; }
+
+  .checkbox-group { display:flex; flex-wrap:wrap; gap:8px; }
+  .checkbox-item { display:flex; align-items:center; gap:6px; background:#f5f5f5; padding:6px 10px; border-radius:8px; cursor:pointer; font-size:13px; }
+  .checkbox-item input { width:auto; accent-color:var(--primary); }
+
+  .alert { padding:12px 16px; border-radius:10px; font-size:13px; font-weight:600; margin-bottom:16px; display:none; }
+  .alert.error { background:#ffebee; color:var(--error); border:1px solid #ffcdd2; }
+  .alert.success { background:#e8f5e9; color:var(--primary-dark); border:1px solid #c8e6c9; }
+
+  .payment-proof { display:none; }
+
+  .step { display:none; }
+  .step.active { display:block; }
+
+  .step-indicators { display:flex; justify-content:center; gap:6px; margin-bottom:20px; }
+  .step-dot { width:8px; height:8px; border-radius:50%; background:#ddd; transition:all .2s; }
+  .step-dot.active { background:var(--primary); width:24px; border-radius:4px; }
+
+  .btn-outline { background:none; border:2px solid var(--primary); color:var(--primary); margin-top:8px; }
+  .btn-outline:hover { background:var(--primary); color:white; }
+
+  #loadingOverlay { position:fixed; inset:0; background:rgba(255,255,255,0.9); display:none; align-items:center; justify-content:center; z-index:999; flex-direction:column; gap:12px; }
+  .spinner { width:40px; height:40px; border:4px solid #e8f5e9; border-top-color:var(--primary); border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p style="color:var(--primary);font-weight:600;">جاري التحميل...</p>
+</div>
+
+<div class="container">
+  <div class="logo-area">
+    <div class="logo-icon">🥗</div>
+    <h1>نظام متابعة التغذية</h1>
+    <p>مرحباً بك، سجل دخولك أو اشترك الآن</p>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('login')">تسجيل الدخول</button>
+      <button class="tab" onclick="showTab('register')">اشتراك جديد</button>
+    </div>
+
+    <!-- تسجيل الدخول -->
+    <div id="loginTab">
+      <div class="alert error" id="loginError"></div>
+      <div class="form-group">
+        <label>رقم الهاتف</label>
+        <input type="tel" id="loginPhone" placeholder="01xxxxxxxxx">
+      </div>
+      <div class="form-group">
+        <label>كلمة المرور</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="btn" onclick="doLogin()">دخول</button>
+    </div>
+
+    <!-- التسجيل -->
+    <div id="registerTab" style="display:none;">
+      <div class="step-indicators">
+        <div class="step-dot active" id="dot1"></div>
+        <div class="step-dot" id="dot2"></div>
+        <div class="step-dot" id="dot3"></div>
+      </div>
+
+      <div class="alert error" id="regError"></div>
+      <div class="alert success" id="regSuccess"></div>
+
+      <!-- خطوة 1: بيانات أساسية -->
+      <div class="step active" id="step1">
+        <div class="form-group">
+          <label>الاسم الكامل</label>
+          <input type="text" id="regName" placeholder="محمد أحمد">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>رقم الهاتف</label>
+            <input type="tel" id="regPhone" placeholder="01xxxxxxxxx">
+          </div>
+          <div class="form-group">
+            <label>النوع</label>
+            <select id="regGender">
+              <option value="">اختر</option>
+              <option value="male">ذكر</option>
+              <option value="female">أنثى</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>كلمة المرور</label>
+            <input type="password" id="regPassword" placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label>تأكيد المرور</label>
+            <input type="password" id="regPassword2" placeholder="••••••••">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>تاريخ الميلاد</label>
+            <input type="date" id="regBirth">
+          </div>
+          <div class="form-group">
+            <label>العنوان</label>
+            <input type="text" id="regAddress" placeholder="المدينة">
+          </div>
+        </div>
+        <button class="btn" onclick="nextStep(1)">التالي ←</button>
+      </div>
+
+      <!-- خطوة 2: البيانات الطبية -->
+      <div class="step" id="step2">
+        <div class="form-row">
+          <div class="form-group">
+            <label>الطول (سم)</label>
+            <input type="number" id="regHeight" placeholder="170">
+          </div>
+          <div class="form-group">
+            <label>الوزن (كجم)</label>
+            <input type="number" id="regWeight" placeholder="80">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>الهدف</label>
+            <select id="regGoal">
+              <option value="lose">إنقاص الوزن</option>
+              <option value="gain">زيادة الوزن</option>
+              <option value="maintain">تثبيت الوزن</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>معدل النشاط</label>
+            <select id="regActivity">
+              <option value="sedentary">قليل الحركة</option>
+              <option value="light">خفيف</option>
+              <option value="moderate">متوسط</option>
+              <option value="active">نشيط</option>
+              <option value="very_active">نشيط جداً</option>
+            </select>
+          </div>
+        </div>
+        <div class="section-title">الأمراض المزمنة</div>
+        <div class="checkbox-group" id="diseasesList">
+          <p style="color:#999;font-size:13px;">جاري التحميل...</p>
+        </div>
+        <div class="section-title">الحساسيات الغذائية</div>
+        <div class="checkbox-group" id="allergiesList">
+          <p style="color:#999;font-size:13px;">جاري التحميل...</p>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <button class="btn btn-outline" onclick="prevStep(2)" style="flex:1;">→ السابق</button>
+          <button class="btn" onclick="nextStep(2)" style="flex:1;">التالي ←</button>
+        </div>
+      </div>
+
+      <!-- خطوة 3: الباقة والدفع -->
+      <div class="step" id="step3">
+        <div class="form-group">
+          <label>العيادة</label>
+          <select id="regClinic">
+            <option value="">اختر العيادة</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>الباقة المطلوبة</label>
+          <select id="regPackage" onchange="updatePaymentInfo()">
+            <option value="">اختر الباقة</option>
+          </select>
+        </div>
+        <div id="packageInfo" style="display:none;background:#e8f5e9;padding:12px;border-radius:10px;margin-bottom:12px;font-size:13px;"></div>
+        <div class="form-group">
+          <label>طريقة الدفع</label>
+          <select id="regPayMethod" onchange="togglePaymentProof()">
+            <option value="cash">كاش</option>
+            <option value="vodafone_cash">فودافون كاش</option>
+            <option value="instapay">انستا باي</option>
+          </select>
+        </div>
+        <div id="paymentProofSection" class="payment-proof">
+          <div id="paymentNumbers" style="background:#fff3e0;padding:10px;border-radius:8px;margin-bottom:10px;font-size:13px;"></div>
+          <div class="form-group">
+            <label>صورة إثبات الدفع</label>
+            <input type="file" id="regPaymentProof" accept="image/*">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <button class="btn btn-outline" onclick="prevStep(3)" style="flex:1;">→ السابق</button>
+          <button class="btn" onclick="doRegister()" style="flex:1;">إرسال الطلب</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://fdrfrkwscuydtoozpviw.supabase.co';
+const SUPA_KEY = 'sb_publishable_nmy2xAvlJ4rGji1qYqjXbg_r6NFprBB';
+
+const db = {
+  async get(table, query='') {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}${query}`, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+    return r.json();
+  },
+  async post(table, data) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+      method:'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(data)
+    });
+    return r.json();
+  }
+};
+
+const storage = {
+  async upload(bucket, path, file) {
+    const r = await fetch(`${SUPA_URL}/storage/v1/object/${bucket}/${path}`, {
+      method:'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` },
+      body: file
+    });
+    const d = await r.json();
+    return `${SUPA_URL}/storage/v1/object/public/${bucket}/${path}`;
+  }
+};
+
+function loading(show) {
+  document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+}
+
+function showTab(tab) {
+  document.getElementById('loginTab').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('registerTab').style.display = tab === 'register' ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1)));
+  if (tab === 'register') loadRegisterData();
+}
+
+let currentStep = 1;
+function nextStep(from) {
+  if (!validateStep(from)) return;
+  currentStep = from + 1;
+  document.querySelectorAll('.step').forEach((s,i) => s.classList.toggle('active', i === currentStep-1));
+  document.querySelectorAll('.step-dot').forEach((d,i) => d.classList.toggle('active', i < currentStep));
+}
+function prevStep(from) {
+  currentStep = from - 1;
+  document.querySelectorAll('.step').forEach((s,i) => s.classList.toggle('active', i === currentStep-1));
+  document.querySelectorAll('.step-dot').forEach((d,i) => d.classList.toggle('active', i < currentStep));
+}
+
+function validateStep(step) {
+  const err = document.getElementById('regError');
+  err.style.display = 'none';
+  if (step === 1) {
+    if (!document.getElementById('regName').value.trim()) { showErr('regError','أدخل الاسم'); return false; }
+    if (!document.getElementById('regPhone').value.trim()) { showErr('regError','أدخل رقم الهاتف'); return false; }
+    if (!document.getElementById('regGender').value) { showErr('regError','اختر النوع'); return false; }
+    const p1 = document.getElementById('regPassword').value;
+    const p2 = document.getElementById('regPassword2').value;
+    if (p1.length < 6) { showErr('regError','كلمة المرور 6 أحرف على الأقل'); return false; }
+    if (p1 !== p2) { showErr('regError','كلمتا المرور غير متطابقتين'); return false; }
+  }
+  if (step === 2) {
+    if (!document.getElementById('regHeight').value) { showErr('regError','أدخل الطول'); return false; }
+    if (!document.getElementById('regWeight').value) { showErr('regError','أدخل الوزن'); return false; }
+  }
+  return true;
+}
+
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function loadRegisterData() {
+  const [diseases, allergies, packages, clinics] = await Promise.all([
+    db.get('chronic_diseases','?order=name'),
+    db.get('food_allergies','?order=name'),
+    db.get('packages','?is_active=eq.true&order=price'),
+    db.get('clinics','?order=name')
+  ]);
+
+  document.getElementById('diseasesList').innerHTML = diseases.length ?
+    diseases.map(d => `<label class="checkbox-item"><input type="checkbox" value="${d.id}" name="disease"> ${d.name}</label>`).join('') :
+    '<p style="color:#999;font-size:13px;">لا توجد أمراض مسجلة</p>';
+
+  document.getElementById('allergiesList').innerHTML = allergies.length ?
+    allergies.map(a => `<label class="checkbox-item"><input type="checkbox" value="${a.id}" name="allergy"> ${a.name}</label>`).join('') :
+    '<p style="color:#999;font-size:13px;">لا توجد حساسيات مسجلة</p>';
+
+  const pkgSel = document.getElementById('regPackage');
+  packages.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p.id; o.textContent = `${p.name} - ${p.price} جنيه`;
+    o.dataset.price = p.price; o.dataset.name = p.name;
+    o.dataset.duration = p.duration_days; o.dataset.sessions = p.sessions;
+    pkgSel.appendChild(o);
+  });
+
+  const clinicSel = document.getElementById('regClinic');
+  clinics.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.name;
+    clinicSel.appendChild(o);
+  });
+
+  // load doctor settings for payment numbers
+  const settings = await db.get('doctor_settings','');
+  if (settings && settings[0]) {
+    window._doctorSettings = settings[0];
+  }
+}
+
+function updatePaymentInfo() {
+  const sel = document.getElementById('regPackage');
+  const opt = sel.options[sel.selectedIndex];
+  const info = document.getElementById('packageInfo');
+  if (opt && opt.value) {
+    info.style.display = 'block';
+    info.innerHTML = `<strong>${opt.dataset.name}</strong><br>المدة: ${opt.dataset.duration} يوم | الجلسات: ${opt.dataset.sessions} | السعر: <strong>${opt.dataset.price} جنيه</strong>`;
+  } else {
+    info.style.display = 'none';
+  }
+}
+
+function togglePaymentProof() {
+  const method = document.getElementById('regPayMethod').value;
+  const section = document.getElementById('paymentProofSection');
+  const numbers = document.getElementById('paymentNumbers');
+  const s = window._doctorSettings;
+  if (method === 'cash') {
+    section.style.display = 'none';
+  } else {
+    section.style.display = 'block';
+    if (s) {
+      if (method === 'vodafone_cash' && s.vodafone_cash) {
+        numbers.innerHTML = `📱 رقم فودافون كاش: <strong>${s.vodafone_cash}</strong>`;
+      } else if (method === 'instapay' && s.instapay) {
+        numbers.innerHTML = `💳 رقم انستا باي: <strong>${s.instapay}</strong>`;
+      } else {
+        numbers.innerHTML = 'تواصل مع الدكتور لتأكيد رقم التحويل';
+      }
+    }
+  }
+}
+
+async function doLogin() {
+  const phone = document.getElementById('loginPhone').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+  if (!phone || !password) { showErr('loginError','أدخل رقم الهاتف وكلمة المرور'); return; }
+  loading(true);
+  try {
+    const users = await db.get('users', `?phone=eq.${encodeURIComponent(phone)}&password=eq.${encodeURIComponent(password)}&is_active=eq.true`);
+    if (!users || !users.length) { showErr('loginError','رقم الهاتف أو كلمة المرور غلط'); loading(false); return; }
+    const user = users[0];
+    localStorage.setItem('user', JSON.stringify(user));
+    if (user.role === 'doctor') {
+      window.location.href = 'doctor.html';
+    } else {
+      window.location.href = 'client.html';
+    }
+  } catch(e) {
+    showErr('loginError','حدث خطأ، حاول مجدداً');
+    loading(false);
+  }
+}
+
+async function doRegister() {
+  document.getElementById('regError').style.display = 'none';
+  const name = document.getElementById('regName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const gender = document.getElementById('regGender').value;
+  const password = document.getElementById('regPassword').value;
+  const birth = document.getElementById('regBirth').value;
+  const address = document.getElementById('regAddress').value;
+  const height = document.getElementById('regHeight').value;
+  const weight = document.getElementById('regWeight').value;
+  const goal = document.getElementById('regGoal').value;
+  const activity = document.getElementById('regActivity').value;
+  const packageId = document.getElementById('regPackage').value;
+  const payMethod = document.getElementById('regPayMethod').value;
+  const clinicId = document.getElementById('regClinic').value;
+
+  if (!packageId) { showErr('regError','اختر الباقة'); return; }
+
+  let paymentProofUrl = null;
+  if (payMethod !== 'cash') {
+    const proofFile = document.getElementById('regPaymentProof').files[0];
+    if (!proofFile) { showErr('regError','ارفع صورة إثبات الدفع'); return; }
+    loading(true);
+    try {
+      paymentProofUrl = await storage.upload('nutrition', `payment-proofs/${Date.now()}-${proofFile.name}`, proofFile);
+    } catch(e) { showErr('regError','فشل رفع الصورة'); loading(false); return; }
+  } else { loading(true); }
+
+  // Get selected diseases
+  const selectedDiseases = [...document.querySelectorAll('input[name="disease"]:checked')].map(i => i.value);
+  const selectedAllergies = [...document.querySelectorAll('input[name="allergy"]:checked')].map(i => i.value);
+
+  try {
+    const existing = await db.get('users', `?phone=eq.${encodeURIComponent(phone)}`);
+    if (existing && existing.length) { showErr('regError','رقم الهاتف مسجل مسبقاً'); loading(false); return; }
+
+    const req = await db.post('subscription_requests', {
+      name, phone, password, gender,
+      birth_date: birth || null,
+      height: height ? parseFloat(height) : null,
+      weight: weight ? parseFloat(weight) : null,
+      goal, activity_level: activity,
+      address,
+      package_id: packageId,
+      payment_method: payMethod,
+      payment_proof: paymentProofUrl,
+      status: 'pending',
+      notes: `أمراض: ${selectedDiseases.join(',')} | حساسيات: ${selectedAllergies.join(',')}`
+    });
+
+    // Create user and client immediately
+    const userArr = await db.post('users', { name, phone, password, role: 'client', is_active: true });
+    if (userArr && userArr[0]) {
+      const userId = userArr[0].id;
+      const clientArr = await db.post('clients', {
+        user_id: userId,
+        clinic_id: clinicId || null,
+        name, phone, gender,
+        birth_date: birth || null,
+        address,
+        height: height ? parseFloat(height) : null,
+        first_weight: weight ? parseFloat(weight) : null,
+        goal, activity_level: activity,
+        subscription_approved: false
+      });
+      if (clientArr && clientArr[0]) {
+        const clientId = clientArr[0].id;
+        for (const did of selectedDiseases) {
+          await db.post('client_diseases', { client_id: clientId, disease_id: did });
+        }
+        for (const aid of selectedAllergies) {
+          await db.post('client_allergies', { client_id: clientId, allergy_id: aid });
+        }
+      }
+    }
+
+    loading(false);
+    document.getElementById('regError').style.display = 'none';
+    const suc = document.getElementById('regSuccess');
+    suc.textContent = 'تم إرسال طلبك بنجاح! سيتم تفعيل حسابك بعد موافقة الدكتور.';
+    suc.style.display = 'block';
+    setTimeout(() => { showTab('login'); suc.style.display='none'; }, 3000);
+  } catch(e) {
+    showErr('regError','حدث خطأ أثناء التسجيل');
+    loading(false);
+  }
+}
+
+// Auto-login check
+const savedUser = localStorage.getItem('user');
+if (savedUser) {
+  const u = JSON.parse(savedUser);
+  if (u.role === 'doctor') window.location.href = 'doctor.html';
+  else window.location.href = 'client.html';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('loginTab').style.display !== 'none') doLogin();
+  }
+});
+</script>
+</body>
+</html>

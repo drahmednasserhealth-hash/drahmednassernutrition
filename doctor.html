@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>لوحة الدكتور - نظام التغذية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#2e7d32;--primary-light:#4caf50;--primary-dark:#1b5e20;--bg:#f1f8e9;--white:#fff;--text:#1a1a1a;--text-muted:#666;--border:#e0e0e0;--error:#c62828;--warning:#f57f17;--info:#1565c0;--shadow:0 2px 12px rgba(46,125,50,0.12);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);min-height:100vh;font-size:14px;}
+.app{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--primary);color:white;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar h2{font-size:15px;font-weight:700;flex:1;text-align:center;}
+.content{flex:1;padding:12px;padding-bottom:84px;max-width:700px;margin:0 auto;width:100%;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 10px rgba(0,0,0,0.08);}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 2px 8px;cursor:pointer;color:var(--text-muted);font-size:9px;font-weight:600;border:none;background:none;font-family:'Cairo',sans-serif;position:relative;transition:color .2s;min-width:0;}
+.nav-item.active{color:var(--primary);}
+.nav-item .icon{font-size:18px;margin-bottom:1px;}
+.nav-badge{position:absolute;top:2px;right:50%;transform:translateX(8px);background:#f44336;color:white;font-size:8px;font-weight:700;padding:1px 4px;border-radius:10px;min-width:14px;text-align:center;}
+.card{background:white;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow);}
+.card-title{font-size:14px;font-weight:700;color:var(--primary-dark);margin-bottom:10px;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.stat-card{background:white;border-radius:12px;padding:12px;text-align:center;box-shadow:var(--shadow);}
+.stat-num{font-size:22px;font-weight:800;color:var(--primary);}
+.stat-label{font-size:10px;color:var(--text-muted);font-weight:600;margin-top:2px;}
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.quick-btn{background:white;border:none;border-radius:12px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-family:'Cairo',sans-serif;box-shadow:var(--shadow);transition:all .15s;}
+.quick-btn:active{transform:scale(0.94);}
+.quick-btn .q-icon{font-size:20px;}
+.quick-btn .q-label{font-size:10px;font-weight:700;color:var(--text);}
+.list-item{display:flex;align-items:center;gap:10px;padding:11px;background:white;border-radius:12px;margin-bottom:7px;box-shadow:0 1px 5px rgba(0,0,0,0.06);cursor:pointer;transition:all .15s;}
+.list-item:active{transform:scale(0.98);}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;}
+.item-info{flex:1;min-width:0;}
+.item-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-sub{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.weight-badge{font-size:11px;font-weight:700;padding:3px 7px;border-radius:20px;}
+.weight-down{background:#e8f5e9;color:#2e7d32;}
+.weight-up{background:#fff3e0;color:#e65100;}
+.weight-same{background:#f5f5f5;color:#666;}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;color:var(--text);background:white;transition:border-color .2s;outline:none;-webkit-appearance:none;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary);}
+.form-group textarea{resize:vertical;min-height:70px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.btn{padding:11px 18px;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;}
+.btn-primary{background:var(--primary);color:white;}
+.btn-primary:active{background:var(--primary-dark);}
+.btn-danger{background:#ffebee;color:var(--error);border:1px solid #ffcdd2;}
+.btn-outline{background:none;border:2px solid var(--primary);color:var(--primary);}
+.btn-full{width:100%;}
+.btn-sm{padding:7px 12px;font-size:12px;}
+.btn-red{background:var(--error);color:white;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:white;border-radius:20px 20px 0 0;width:100%;max-width:640px;max-height:92vh;overflow-y:auto;padding:18px;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:sticky;top:-18px;background:white;padding:8px 0;z-index:1;}
+.modal-title{font-size:15px;font-weight:800;color:var(--primary-dark);}
+.modal-close{background:#f5f5f5;border:none;font-size:18px;cursor:pointer;color:var(--text-muted);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.alert{padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:12px;display:none;}
+.alert.error{background:#ffebee;color:var(--error);}
+.alert.success{background:#e8f5e9;color:var(--primary-dark);}
+.search-box{display:flex;gap:8px;margin-bottom:10px;}
+.search-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;outline:none;width:100%;}
+.search-input:focus{border-color:var(--primary);}
+.inner-tabs{display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+.inner-tab{padding:7px 12px;border:none;border-radius:20px;font-family:'Cairo',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;background:#f5f5f5;color:var(--text-muted);transition:all .2s;flex-shrink:0;}
+.inner-tab.active{background:var(--primary);color:white;}
+.section-title{font-size:11px;font-weight:700;color:var(--primary);background:#e8f5e9;padding:6px 12px;border-radius:8px;margin:14px 0 8px;}
+.divider{height:1px;background:var(--border);margin:12px 0;}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-active{background:#e8f5e9;color:#2e7d32;}
+.badge-expired{background:#ffebee;color:var(--error);}
+.badge-pending{background:#fff8e1;color:var(--warning);}
+.badge-warning{background:#fff3e0;color:#e65100;}
+#loadingOverlay{position:fixed;inset:0;background:rgba(255,255,255,0.92);display:none;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:12px;}
+.spinner{width:36px;height:36px;border:4px solid #e8f5e9;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:600;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;max-width:90vw;}
+.toast.show{opacity:1;}
+.accordion-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f5f5f5;border-radius:10px;cursor:pointer;margin-bottom:4px;font-weight:700;font-size:13px;}
+.accordion-body{display:none;padding:4px 0;}
+.accordion-body.open{display:block;}
+.progress-bar{height:8px;background:#e8f5e9;border-radius:4px;margin-top:6px;}
+.progress-fill{height:100%;background:var(--primary);border-radius:4px;transition:width .5s;}
+.chat-msg{display:flex;margin-bottom:8px;}
+.chat-msg.sent{justify-content:flex-start;}
+.chat-msg.received{justify-content:flex-end;}
+.chat-bubble{max-width:75%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.5;}
+.chat-msg.sent .chat-bubble{background:#e8f5e9;color:var(--text);}
+.chat-msg.received .chat-bubble{background:var(--primary);color:white;}
+.chat-time{font-size:10px;opacity:.6;margin-top:3px;}
+.confirm-dialog{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:none;align-items:center;justify-content:center;padding:20px;}
+.confirm-dialog.open{display:flex;}
+.confirm-box{background:white;border-radius:16px;padding:24px;width:100%;max-width:320px;text-align:center;}
+.confirm-title{font-size:16px;font-weight:800;margin-bottom:8px;}
+.confirm-msg{font-size:13px;color:var(--text-muted);margin-bottom:20px;line-height:1.5;}
+.confirm-btns{display:flex;gap:8px;}
+@media print{.bottom-nav,.topbar,.modal-overlay{display:none!important;}.content{padding:0!important;max-width:100%!important;}}
+</style>
+</head>
+<body>
+<div id="loadingOverlay"><div class="spinner"></div><p style="color:var(--primary);font-weight:600;">جاري التحميل...</p></div>
+<div class="toast" id="toast"></div>
+<div class="confirm-dialog" id="confirmDialog">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirmTitle">تأكيد</div>
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-btns">
+      <button class="btn btn-outline btn-full" onclick="closeConfirm(false)">إلغاء</button>
+      <button class="btn btn-red btn-full" onclick="closeConfirm(true)">تأكيد</button>
+    </div>
+  </div>
+</div>
+<div class="app">
+  <div class="topbar">
+    <span style="font-size:18px;">🥗</span>
+    <h2 id="pageTitle">الرئيسية</h2>
+    <button onclick="logout()" style="background:rgba(255,255,255,0.2);border:none;color:white;padding:6px 10px;border-radius:8px;cursor:pointer;font-family:'Cairo',sans-serif;font-size:11px;">خروج</button>
+  </div>
+  <div class="content" id="mainContent"></div>
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="showPage('home')" id="nav-home"><span class="icon">🏠</span><span>الرئيسية</span></button>
+    <button class="nav-item" onclick="showPage('requests')" id="nav-requests"><span class="icon">📋</span><span>الطلبات</span><span class="nav-badge" id="reqBadge" style="display:none">0</span></button>
+    <button class="nav-item" onclick="showPage('clients')" id="nav-clients"><span class="icon">👥</span><span>العملاء</span></button>
+    <button class="nav-item" onclick="showPage('plans')" id="nav-plans"><span class="icon">📄</span><span>الخطط</span></button>
+    <button class="nav-item" onclick="showPage('chat')" id="nav-chat"><span class="icon">💬</span><span>الشات</span><span class="nav-badge" id="chatBadge" style="display:none">0</span></button>
+    <button class="nav-item" onclick="showPage('finance')" id="nav-finance"><span class="icon">💰</span><span>المالية</span></button>
+    <button class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="icon">⚙️</span><span>الضبط</span></button>
+  </nav>
+</div>
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
+
+<script>
+const SUPA_URL='https://fdrfrkwscuydtoozpviw.supabase.co';
+const SUPA_KEY='sb_publishable_nmy2xAvlJ4rGji1qYqjXbg_r6NFprBB';
+const user=JSON.parse(localStorage.getItem('user')||'null');
+if(!user||user.role!=='doctor') window.location.href='index.html';
+
+const db={
+  async get(t,q=''){try{const r=await fetch(`${SUPA_URL}/rest/v1/${t}${q}`,{headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}});if(!r.ok)return[];return r.json();}catch(e){return[];}},
+  async post(t,d){const r=await fetch(`${SUPA_URL}/rest/v1/${t}`,{method:'POST',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(d)});const res=await r.json();return Array.isArray(res)?res:[res];},
+  async patch(t,id,d){const r=await fetch(`${SUPA_URL}/rest/v1/${t}?id=eq.${id}`,{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(d)});return r.json();},
+  async del(t,id){const r=await fetch(`${SUPA_URL}/rest/v1/${t}?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}});return r.ok;},
+  async delWhere(t,f,v){const r=await fetch(`${SUPA_URL}/rest/v1/${t}?${f}=eq.${v}`,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}});return r.ok;}
+};
+
+const storage={async upload(bucket,path,file){await fetch(`${SUPA_URL}/storage/v1/object/${bucket}/${path}`,{method:'POST',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`},body:file});return`${SUPA_URL}/storage/v1/object/public/${bucket}/${path}`;}};
+
+function loading(show){document.getElementById('loadingOverlay').style.display=show?'flex':'none';}
+function toast(msg,color='#333'){const t=document.getElementById('toast');t.textContent=msg;t.style.background=color;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function logout(){localStorage.removeItem('user');window.location.href='index.html';}
+function openModal(html){document.getElementById('modalContent').innerHTML=html;document.getElementById('modalOverlay').classList.add('open');}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))closeModal();});
+
+let _confirmResolve=null;
+function showConfirm(title,msg){return new Promise(resolve=>{_confirmResolve=resolve;document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmMsg').textContent=msg;document.getElementById('confirmDialog').classList.add('open');});}
+function closeConfirm(result){document.getElementById('confirmDialog').classList.remove('open');if(_confirmResolve){_confirmResolve(result);_confirmResolve=null;}}
+
+function showPage(page){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`nav-${page}`)?.classList.add('active');
+  const titles={home:'الرئيسية',requests:'الطلبات',clients:'العملاء',plans:'الخطط',chat:'الشات',finance:'المالية',settings:'الضبط'};
+  document.getElementById('pageTitle').textContent=titles[page]||page;
+  document.getElementById('mainContent').innerHTML='<div style="text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>';
+  const pages={home:loadHome,requests:loadRequests,clients:loadClients,plans:loadPlans,chat:loadChat,finance:loadFinance,settings:loadSettings};
+  pages[page]?.();
+}
+
+// ======= HOME =======
+async function loadHome(){
+  const [clients,subs,msgs,requests]=await Promise.all([db.get('clients',''),db.get('subscriptions','?is_active=eq.true'),db.get('messages','?is_read=eq.false&sender_role=eq.client'),db.get('subscription_requests','?status=eq.pending')]);
+  const today=new Date();
+  const expiring=subs.filter(s=>{const d=(new Date(s.end_date)-today)/864e5;return d>=0&&d<=7;});
+  const activeSubs=subs.filter(s=>new Date()<=new Date(s.end_date));
+  const unreadC=[...new Set(msgs.map(m=>m.client_id))].length;
+  if(requests.length){document.getElementById('reqBadge').textContent=requests.length;document.getElementById('reqBadge').style.display='block';}
+  if(unreadC){document.getElementById('chatBadge').textContent=unreadC;document.getElementById('chatBadge').style.display='block';}
+  document.getElementById('mainContent').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num">${clients.length}</div><div class="stat-label">إجمالي العملاء</div></div>
+      <div class="stat-card"><div class="stat-num">${activeSubs.length}</div><div class="stat-label">اشتراكات نشطة</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#e65100">${expiring.length}</div><div class="stat-label">تنتهي قريباً</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--info)">${unreadC}</div><div class="stat-label">رسائل جديدة</div></div>
+    </div>
+    <div class="quick-actions">
+      <button class="quick-btn" onclick="showAddClientModal()"><span class="q-icon">➕</span><span class="q-label">عميل جديد</span></button>
+      <button class="quick-btn" onclick="showPage('requests')"><span class="q-icon">📬</span><span class="q-label">الطلبات</span></button>
+      <button class="quick-btn" onclick="showBroadcastModal()"><span class="q-icon">📢</span><span class="q-label">رسالة عامة</span></button>
+      <button class="quick-btn" onclick="showPage('chat')"><span class="q-icon">💬</span><span class="q-label">الشات</span></button>
+      <button class="quick-btn" onclick="showPage('finance')"><span class="q-icon">💰</span><span class="q-label">المالية</span></button>
+      <button class="quick-btn" onclick="showAnalytics()"><span class="q-icon">📊</span><span class="q-label">تحليلات</span></button>
+    </div>
+    ${expiring.length?`<div class="card"><div class="card-title">⚠️ تنتهي خلال 7 أيام</div><div id="expiringList"></div></div>`:''}
+    ${requests.length?`<div class="card"><div class="card-title">📬 طلبات معلقة (${requests.length})</div>${requests.slice(0,3).map(r=>`<div class="list-item" onclick="showPage('requests')"><div class="avatar" style="background:#ff8f00">${r.name.charAt(0)}</div><div class="item-info"><div class="item-name">${r.name}</div><div class="item-sub">${r.phone}</div></div><span class="badge badge-pending">معلق</span></div>`).join('')}</div>`:''}
+  `;
+  if(expiring.length){
+    const cm={}; (await db.get('clients','')).forEach(c=>cm[c.id]=c);
+    document.getElementById('expiringList').innerHTML=expiring.map(s=>{const c=cm[s.client_id];const days=Math.ceil((new Date(s.end_date)-today)/864e5);return`<div class="list-item" onclick="openClientDetail('${s.client_id}')"><div class="avatar" style="background:#e65100">${c?.name?.charAt(0)||'?'}</div><div class="item-info"><div class="item-name">${c?.name||'-'}</div><div class="item-sub">${c?.phone||''}</div></div><span class="badge badge-warning">${days} يوم</span></div>`;}).join('');
+  }
+}
+
+// ======= REQUESTS =======
+async function loadRequests(){
+  const [requests,packages]=await Promise.all([db.get('subscription_requests','?order=created_at.desc'),db.get('packages','')]);
+  const pkgMap={}; packages.forEach(p=>pkgMap[p.id]=p);
+  const sL={pending:'معلق',approved:'مقبول',rejected:'مرفوض'};
+  const sB={pending:'badge-pending',approved:'badge-active',rejected:'badge-expired'};
+  document.getElementById('mainContent').innerHTML=`
+    <div class="inner-tabs">
+      <button class="inner-tab active" onclick="filterRequests('all',this)">الكل (${requests.length})</button>
+      <button class="inner-tab" onclick="filterRequests('pending',this)">معلق (${requests.filter(r=>r.status==='pending').length})</button>
+      <button class="inner-tab" onclick="filterRequests('approved',this)">مقبول</button>
+      <button class="inner-tab" onclick="filterRequests('rejected',this)">مرفوض</button>
+    </div>
+    <div id="requestsList">
+      ${requests.map(r=>`<div class="list-item request-item" data-status="${r.status}" onclick="showRequestDetail('${r.id}')">
+        <div class="avatar" style="background:${r.status==='pending'?'#ff8f00':r.status==='approved'?'var(--primary)':'#c62828'}">${r.name.charAt(0)}</div>
+        <div class="item-info"><div class="item-name">${r.name}</div><div class="item-sub">${r.phone} • ${pkgMap[r.package_id]?.name||'-'}</div></div>
+        <span class="badge ${sB[r.status]||'badge-pending'}">${sL[r.status]||r.status}</span>
+      </div>`).join('')||'<p style="text-align:center;color:#aaa;padding:30px;">لا توجد طلبات</p>'}
+    </div>`;
+}
+
+function filterRequests(status,btn){
+  document.querySelectorAll('.inner-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+  document.querySelectorAll('.request-item').forEach(el=>{el.style.display=(status==='all'||el.dataset.status===status)?'flex':'none';});
+}
+
+async function showRequestDetail(id){
+  loading(true);
+  const reqs=await db.get('subscription_requests',`?id=eq.${id}`);
+  const req=reqs[0]; if(!req){loading(false);return;}
+  const pkgs=await db.get('packages','');
+  const pkg=pkgs.find(p=>p.id===req.package_id);
+  loading(false);
+  openModal(`
+    <div class="modal-header"><span class="modal-title">📋 تفاصيل الطلب</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="background:#f5f5f5;border-radius:12px;padding:14px;margin-bottom:12px;">
+      <div style="font-size:18px;font-weight:800;">${req.name}</div>
+      <div style="color:var(--text-muted);font-size:13px;margin-top:2px;">${req.phone}</div>
+      <span class="badge ${req.status==='pending'?'badge-pending':req.status==='approved'?'badge-active':'badge-expired'}" style="margin-top:6px;display:inline-block;">${req.status==='pending'?'معلق':req.status==='approved'?'مقبول':'مرفوض'}</span>
+    </div>
+    <div class="form-row" style="margin-bottom:8px;font-size:13px;">
+      <div style="background:#f9f9f9;padding:10px;border-radius:10px;"><div style="color:#aaa;font-size:11px;margin-bottom:2px;">الباقة</div><strong>${pkg?.name||'-'}</strong> - ${pkg?.price||'-'} ج</div>
+      <div style="background:#f9f9f9;padding:10px;border-radius:10px;"><div style="color:#aaa;font-size:11px;margin-bottom:2px;">الدفع</div><strong>${req.payment_method==='vodafone_cash'?'فودافون كاش':req.payment_method==='instapay'?'انستا باي':'كاش'}</strong></div>
+    </div>
+    <div class="form-row" style="font-size:12px;margin-bottom:10px;">
+      <div style="background:#f9f9f9;padding:8px;border-radius:8px;">الطول: <strong>${req.height||'-'} سم</strong></div>
+      <div style="background:#f9f9f9;padding:8px;border-radius:8px;">الوزن: <strong>${req.weight||'-'} كجم</strong></div>
+      <div style="background:#f9f9f9;padding:8px;border-radius:8px;">الهدف: <strong>${req.goal==='lose'?'إنقاص':req.goal==='gain'?'زيادة':'تثبيت'}</strong></div>
+      <div style="background:#f9f9f9;padding:8px;border-radius:8px;">الجنس: <strong>${req.gender==='male'?'ذكر':'أنثى'}</strong></div>
+    </div>
+    ${req.payment_proof?`<div class="section-title">إثبات الدفع</div><a href="${req.payment_proof}" target="_blank"><img src="${req.payment_proof}" style="width:100%;border-radius:10px;max-height:200px;object-fit:contain;margin-bottom:8px;"></a>`:''}
+    ${req.notes?`<div class="section-title">ملاحظات التسجيل</div><p style="font-size:12px;background:#f9f9f9;padding:10px;border-radius:8px;">${req.notes}</p>`:''}
+    ${req.rejection_reason?`<div class="section-title" style="background:#ffebee;color:var(--error);">سبب الرفض</div><p style="font-size:12px;color:var(--error);background:#ffebee;padding:10px;border-radius:8px;">${req.rejection_reason}</p>`:''}
+    ${req.status==='pending'?`
+      <div style="margin-top:14px;">
+        <button class="btn btn-primary btn-full" onclick="approveRequest('${req.id}')" style="margin-bottom:10px;">✅ موافقة وتفعيل الحساب</button>
+        <div style="background:#fff5f5;border:1px solid #ffcdd2;border-radius:12px;padding:12px;">
+          <div style="font-size:12px;font-weight:700;color:var(--error);margin-bottom:6px;">❌ رفض الطلب</div>
+          <div class="form-group" style="margin-bottom:8px;"><textarea id="rejectReason" placeholder="اكتب سبب الرفض (سيُرسل للعميل)..." style="min-height:60px;"></textarea></div>
+          <button class="btn btn-red btn-full" onclick="rejectRequest('${req.id}')">تأكيد الرفض</button>
+        </div>
+      </div>
+    `:`<div style="text-align:center;padding:14px;color:#aaa;font-size:13px;">✔️ تم معالجة هذا الطلب</div>`}
+  `);
+}
+
+async function approveRequest(reqId){
+  const confirmed=await showConfirm('تأكيد الموافقة','هل تريد قبول هذا الطلب وتفعيل حساب العميل؟');
+  if(!confirmed) return;
+  loading(true);
+  try{
+    const reqs=await db.get('subscription_requests',`?id=eq.${reqId}`);
+    const req=reqs[0];
+    const pkgs=await db.get('packages',`?id=eq.${req.package_id}`);
+    const pkg=pkgs[0];
+    let userId;
+    const eu=await db.get('users',`?phone=eq.${encodeURIComponent(req.phone)}`);
+    if(eu.length){userId=eu[0].id;await db.patch('users',userId,{is_active:true});}
+    else{const nu=await db.post('users',{name:req.name,phone:req.phone,password:req.password||'123456',role:'client',is_active:true});userId=nu[0]?.id;}
+    let clientId;
+    const ec=await db.get('clients',`?user_id=eq.${userId}`);
+    if(ec.length){clientId=ec[0].id;await db.patch('clients',clientId,{subscription_approved:true});}
+    else{const nc=await db.post('clients',{user_id:userId,name:req.name,phone:req.phone,gender:req.gender,birth_date:req.birth_date||null,height:req.height||null,first_weight:req.weight||null,goal:req.goal||'maintain',activity_level:req.activity_level||'moderate',subscription_approved:true});clientId=nc[0]?.id;}
+    if(pkg&&clientId){
+      const start=new Date().toISOString().split('T')[0];
+      const end=new Date(Date.now()+pkg.duration_days*864e5).toISOString().split('T')[0];
+      await db.post('subscriptions',{client_id:clientId,package_id:pkg.id,start_date:start,end_date:end,sessions_total:pkg.sessions,sessions_used:0,price_paid:pkg.price,is_active:true});
+      await db.post('notifications',{client_id:clientId,title:'🎉 تم قبول اشتراكك',message:`مرحباً ${req.name}، تم قبول طلبك في باقة ${pkg.name} حتى ${end}. يمكنك الدخول الآن!`,type:'celebration'});
+    }
+    await db.patch('subscription_requests',reqId,{status:'approved'});
+    loading(false);closeModal();toast('تم قبول الطلب ✅','#2e7d32');loadRequests();
+  }catch(e){loading(false);toast('حدث خطأ','#c62828');}
+}
+
+async function rejectRequest(reqId){
+  const reason=document.getElementById('rejectReason')?.value?.trim();
+  if(!reason){toast('اكتب سبب الرفض','#c62828');return;}
+  const confirmed=await showConfirm('تأكيد الرفض','هل تريد رفض هذا الطلب؟');
+  if(!confirmed) return;
+  loading(true);
+  await db.patch('subscription_requests',reqId,{status:'rejected',rejection_reason:reason});
+  const reqs=await db.get('subscription_requests',`?id=eq.${reqId}`);
+  const req=reqs[0];
+  const users=await db.get('users',`?phone=eq.${encodeURIComponent(req.phone)}`);
+  if(users.length){
+    const clients=await db.get('clients',`?user_id=eq.${users[0].id}`);
+    if(clients.length) await db.post('notifications',{client_id:clients[0].id,title:'❌ تم رفض طلب الاشتراك',message:`نأسف، تم رفض طلبك.\nالسبب: ${reason}\n\nيمكنك التواصل معنا لمزيد من التوضيح.`,type:'warning'});
+  }
+  loading(false);closeModal();toast('تم رفض الطلب');loadRequests();
+}
+
+// ======= CLIENTS =======
+async function loadClients(){
+  const [allClients,subs,visits]=await Promise.all([db.get('clients','?order=name'),db.get('subscriptions','?is_active=eq.true'),db.get('visits','?order=visit_date.asc')]);
+  const subMap={}; subs.forEach(s=>subMap[s.client_id]=s);
+  const visitMap={}; visits.forEach(v=>{if(!visitMap[v.client_id])visitMap[v.client_id]=[];visitMap[v.client_id].push(v);});
+  function wDiff(c){const vs=(visitMap[c.id]||[]).filter(v=>v.weight);if(vs.length<2)return null;return(vs[vs.length-1].weight-vs[vs.length-2].weight).toFixed(1);}
+  document.getElementById('mainContent').innerHTML=`
+    <input class="search-input" placeholder="🔍 ابحث بالاسم أو الهاتف..." oninput="filterClients(this.value)" style="margin-bottom:10px;">
+    <button class="btn btn-primary btn-full" onclick="showAddClientModal()" style="margin-bottom:10px;">➕ إضافة عميل جديد</button>
+    <div id="clientsList">
+      ${allClients.map(c=>{
+        const sub=subMap[c.id];const active=sub&&new Date()<=new Date(sub.end_date);
+        const vs=(visitMap[c.id]||[]).filter(v=>v.weight);const lastW=vs.length?vs[vs.length-1].weight:null;
+        const diff=wDiff(c);
+        return`<div class="list-item" onclick="openClientDetail('${c.id}')">
+          <div class="avatar">${c.name.charAt(0)}</div>
+          <div class="item-info"><div class="item-name">${c.name}</div><div class="item-sub">${c.phone||''} ${lastW?'• '+lastW+' كجم':''}</div></div>
+          <div style="text-align:left;flex-shrink:0;">
+            ${diff!==null?`<div class="weight-badge ${parseFloat(diff)<0?'weight-down':parseFloat(diff)>0?'weight-up':'weight-same'}">${parseFloat(diff)>0?'+':''}${diff}</div>`:'' }
+            <div style="margin-top:3px;"><span class="badge ${active?'badge-active':'badge-expired'}">${active?'نشط':'منتهي'}</span></div>
+          </div>
+        </div>`;
+      }).join('')||'<p style="text-align:center;color:#aaa;padding:30px;">لا يوجد عملاء</p>'}
+    </div>`;
+}
+
+function filterClients(q){document.querySelectorAll('#clientsList .list-item').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'flex':'none';});}
+
+async function showAddClientModal(){
+  const [clinics,diseases,allergies]=await Promise.all([db.get('clinics',''),db.get('chronic_diseases','?order=name'),db.get('food_allergies','?order=name')]);
+  openModal(`
+    <div class="modal-header"><span class="modal-title">➕ عميل جديد</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="alert error" id="addClientErr"></div>
+    <div class="form-row"><div class="form-group"><label>الاسم</label><input type="text" id="cName"></div><div class="form-group"><label>الهاتف</label><input type="tel" id="cPhone"></div></div>
+    <div class="form-row"><div class="form-group"><label>كلمة المرور</label><input type="text" id="cPass" value="123456"></div><div class="form-group"><label>النوع</label><select id="cGender"><option value="male">ذكر</option><option value="female">أنثى</option></select></div></div>
+    <div class="form-row"><div class="form-group"><label>تاريخ الميلاد</label><input type="date" id="cBirth"></div><div class="form-group"><label>العيادة</label><select id="cClinic"><option value="">اختر</option>${clinics.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div></div>
+    <div class="form-row"><div class="form-group"><label>الطول (سم)</label><input type="number" id="cHeight"></div><div class="form-group"><label>الوزن الأول (كجم)</label><input type="number" id="cWeight"></div></div>
+    <div class="form-row"><div class="form-group"><label>الهدف</label><select id="cGoal"><option value="lose">إنقاص</option><option value="gain">زيادة</option><option value="maintain">تثبيت</option></select></div><div class="form-group"><label>النشاط</label><select id="cActivity"><option value="sedentary">قليل</option><option value="light">خفيف</option><option value="moderate">متوسط</option><option value="active">نشيط</option><option value="very_active">نشيط جداً</option></select></div></div>
+    <div class="form-group"><label>العنوان</label><input type="text" id="cAddress"></div>
+    <div class="section-title">الأمراض المزمنة</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">${diseases.map(d=>`<label style="display:flex;align-items:center;gap:4px;background:#f5f5f5;padding:5px 9px;border-radius:8px;cursor:pointer;font-size:12px;"><input type="checkbox" value="${d.id}" name="cdisease" style="accent-color:var(--primary);"> ${d.name}</label>`).join('')}</div>
+    <div class="section-title">الحساسيات</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">${allergies.map(a=>`<label style="display:flex;align-items:center;gap:4px;background:#f5f5f5;padding:5px 9px;border-radius:8px;cursor:pointer;font-size:12px;"><input type="checkbox" value="${a.id}" name="callergy" style="accent-color:var(--primary);"> ${a.name}</label>`).join('')}</div>
+    <div class="form-group"><label>ملاحظات</label><textarea id="cNotes"></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="addClient()">💾 حفظ العميل</button>
+  `);
+}
+
+async function addClient(){
+  const name=document.getElementById('cName').value.trim();const phone=document.getElementById('cPhone').value.trim();
+  const err=document.getElementById('addClientErr');
+  if(!name||!phone){err.textContent='أدخل الاسم والهاتف';err.style.display='block';return;}
+  loading(true);
+  try{
+    const existing=await db.get('users',`?phone=eq.${encodeURIComponent(phone)}`);
+    if(existing.length){loading(false);err.textContent='رقم الهاتف مسجل مسبقاً';err.style.display='block';return;}
+    const ua=await db.post('users',{name,phone,password:document.getElementById('cPass').value||'123456',role:'client',is_active:true});
+    const userId=ua[0]?.id;
+    const ca=await db.post('clients',{user_id:userId,clinic_id:document.getElementById('cClinic').value||null,name,phone,gender:document.getElementById('cGender').value,birth_date:document.getElementById('cBirth').value||null,address:document.getElementById('cAddress').value,height:parseFloat(document.getElementById('cHeight').value)||null,first_weight:parseFloat(document.getElementById('cWeight').value)||null,goal:document.getElementById('cGoal').value,activity_level:document.getElementById('cActivity').value,notes:document.getElementById('cNotes').value,subscription_approved:true});
+    const clientId=ca[0]?.id;
+    if(clientId){
+      for(const d of [...document.querySelectorAll('input[name="cdisease"]:checked')]) await db.post('client_diseases',{client_id:clientId,disease_id:d.value});
+      for(const a of [...document.querySelectorAll('input[name="callergy"]:checked')]) await db.post('client_allergies',{client_id:clientId,allergy_id:a.value});
+    }
+    loading(false);closeModal();toast('تم إضافة العميل ✅','#2e7d32');loadClients();
+  }catch(e){loading(false);toast('حدث خطأ','#c62828');}
+}
+
+async function openClientDetail(clientId){
+  loading(true);
+  const [clients,visits,subs,cD,cA,aD,aA]=await Promise.all([db.get('clients',`?id=eq.${clientId}`),db.get('visits',`?client_id=eq.${clientId}&order=visit_date.asc`),db.get('subscriptions',`?client_id=eq.${clientId}&order=created_at.desc`),db.get('client_diseases',`?client_id=eq.${clientId}`),db.get('client_allergies',`?client_id=eq.${clientId}`),db.get('chronic_diseases',''),db.get('food_allergies','')]);
+  loading(false);
+  const client=clients[0]; if(!client) return;
+  const sub=subs[0];const active=sub&&new Date()<=new Date(sub.end_date);
+  const wv=visits.filter(v=>v.weight);
+  const curW=wv.length?wv[wv.length-1].weight:client.first_weight;
+  const firstW=client.first_weight||(wv[0]?.weight);
+  const diff=curW&&firstW?(curW-firstW).toFixed(1):null;
+  const age=client.birth_date?Math.floor((new Date()-new Date(client.birth_date))/3.156e10):null;
+  const bmi=curW&&client.height?(curW/((client.height/100)**2)).toFixed(1):null;
+  const dMap={}; aD.forEach(d=>dMap[d.id]=d.name);
+  const aMap={}; aA.forEach(a=>aMap[a.id]=a.name);
+
+  openModal(`
+    <div class="modal-header"><span class="modal-title">👤 ${client.name}</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="inner-tabs">
+      <button class="inner-tab active" onclick="switchTab('overview',this)">نظرة عامة</button>
+      <button class="inner-tab" onclick="switchTab('visits',this)">الزيارات</button>
+      <button class="inner-tab" onclick="switchTab('measurements',this)">القياسات</button>
+      <button class="inner-tab" onclick="switchTab('subscription',this)">الاشتراك</button>
+      <button class="inner-tab" onclick="switchTab('edit',this)">تعديل</button>
+    </div>
+
+    <div id="tab-overview">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;">
+        <div class="stat-card"><div class="stat-num" style="font-size:16px;">${curW||'-'}</div><div class="stat-label">الوزن الحالي</div></div>
+        <div class="stat-card"><div class="stat-num" style="font-size:16px;${diff&&parseFloat(diff)<0?'color:#2e7d32':'color:#e65100'}">${diff?`${parseFloat(diff)>0?'+':''}${diff}`:'-'}</div><div class="stat-label">الفرق</div></div>
+        <div class="stat-card"><div class="stat-num" style="font-size:16px;">${bmi||'-'}</div><div class="stat-label">BMI</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:12px;background:#f9f9f9;padding:10px;border-radius:12px;margin-bottom:10px;">
+        <div>📱 ${client.phone||'-'}</div><div>🎂 ${age?age+' سنة':'-'}</div>
+        <div>📏 ${client.height?client.height+' سم':'-'}</div><div>🎯 ${client.goal==='lose'?'إنقاص':client.goal==='gain'?'زيادة':'تثبيت'}</div>
+        <div>📍 ${client.address||'-'}</div><div>👤 ${client.gender==='male'?'ذكر':'أنثى'}</div>
+      </div>
+      ${cD.length?`<div class="section-title">الأمراض</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${cD.map(d=>`<span class="badge badge-warning">${dMap[d.disease_id]||'-'}</span>`).join('')}</div>`:'' }
+      ${cA.length?`<div class="section-title">الحساسيات</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${cA.map(a=>`<span class="badge badge-expired">${aMap[a.allergy_id]||'-'}</span>`).join('')}</div>`:'' }
+      <div class="section-title">الاشتراك</div>
+      <div style="font-size:12px;">${sub?`<span class="badge ${active?'badge-active':'badge-expired'}">${active?'نشط':'منتهي'}</span> ${sub.end_date} | ${sub.sessions_used}/${sub.sessions_total} جلسات`:`<span class="badge badge-expired">لا يوجد اشتراك</span>`}</div>
+      ${client.notes?`<div class="section-title">ملاحظات</div><p style="font-size:12px;background:#f9f9f9;padding:10px;border-radius:8px;">${client.notes}</p>`:''}
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="closeModal();setTimeout(()=>showAddVisitModal('${clientId}'),100)">➕ زيارة جديدة</button>
+        <button class="btn btn-outline btn-sm" onclick="closeModal();showPage('chat');setTimeout(()=>openClientChat('${clientId}'),300)">💬 رسالة</button>
+      </div>
+    </div>
+
+    <div id="tab-visits" style="display:none;">
+      <button class="btn btn-primary btn-full" onclick="closeModal();setTimeout(()=>showAddVisitModal('${clientId}'),100)" style="margin-bottom:10px;">➕ إضافة زيارة</button>
+      ${visits.length?visits.slice().reverse().map(v=>{
+        const vi=wv.findIndex(w=>w.id===v.id);const prevW=vi>0?wv[vi-1].weight:null;
+        const d=v.weight&&prevW?(v.weight-prevW).toFixed(1):null;
+        return`<div class="card" style="margin-bottom:8px;padding:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <strong style="font-size:13px;">${v.visit_date}</strong>
+            ${v.weight?`<span class="weight-badge ${d&&parseFloat(d)<0?'weight-down':d&&parseFloat(d)>0?'weight-up':'weight-same'}">${v.weight} كجم ${d?`(${parseFloat(d)>0?'+':''}${d})`:''}</span>`:''}
+          </div>
+          ${v.notes?`<p style="font-size:12px;color:#555;">${v.notes}</p>`:''}
+          ${v.next_visit_date?`<p style="font-size:11px;color:var(--primary);">📅 القادمة: ${v.next_visit_date}</p>`:''}
+          <button class="btn btn-sm" style="margin-top:6px;background:#f5f5f5;font-size:11px;" onclick="showVisitDetail('${v.id}','${clientId}')">تفاصيل</button>
+        </div>`;
+      }).join(''):'<p style="text-align:center;color:#aaa;padding:20px;">لا توجد زيارات</p>'}
+    </div>
+
+    <div id="tab-measurements" style="display:none;">
+      <button class="btn btn-primary btn-full" onclick="showMeasurementForm('${clientId}')" style="margin-bottom:10px;">➕ إضافة قياسات</button>
+      <div id="mList">جاري التحميل...</div>
+    </div>
+
+    <div id="tab-subscription" style="display:none;"><div id="subDetails">جاري التحميل...</div></div>
+
+    <div id="tab-edit" style="display:none;">
+      <div class="form-row"><div class="form-group"><label>الاسم</label><input type="text" id="eName" value="${client.name}"></div><div class="form-group"><label>الهاتف</label><input type="tel" id="ePhone" value="${client.phone||''}"></div></div>
+      <div class="form-row"><div class="form-group"><label>النوع</label><select id="eGender"><option value="male" ${client.gender==='male'?'selected':''}>ذكر</option><option value="female" ${client.gender==='female'?'selected':''}>أنثى</option></select></div><div class="form-group"><label>تاريخ الميلاد</label><input type="date" id="eBirth" value="${client.birth_date||''}"></div></div>
+      <div class="form-row"><div class="form-group"><label>الطول</label><input type="number" id="eHeight" value="${client.height||''}"></div><div class="form-group"><label>الوزن الأول</label><input type="number" id="eFirstWeight" value="${client.first_weight||''}"></div></div>
+      <div class="form-row"><div class="form-group"><label>الهدف</label><select id="eGoal"><option value="lose" ${client.goal==='lose'?'selected':''}>إنقاص</option><option value="gain" ${client.goal==='gain'?'selected':''}>زيادة</option><option value="maintain" ${client.goal==='maintain'?'selected':''}>تثبيت</option></select></div><div class="form-group"><label>النشاط</label><select id="eActivity"><option value="sedentary" ${client.activity_level==='sedentary'?'selected':''}>قليل</option><option value="light" ${client.activity_level==='light'?'selected':''}>خفيف</option><option value="moderate" ${client.activity_level==='moderate'?'selected':''}>متوسط</option><option value="active" ${client.activity_level==='active'?'selected':''}>نشيط</option><option value="very_active" ${client.activity_level==='very_active'?'selected':''}>نشيط جداً</option></select></div></div>
+      <div class="form-group"><label>العنوان</label><input type="text" id="eAddress" value="${client.address||''}"></div>
+      <div class="section-title">الأمراض المزمنة</div>
+      <div id="editDiseases" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">${aD.map(d=>`<label style="display:flex;align-items:center;gap:4px;background:#f5f5f5;padding:5px 9px;border-radius:8px;cursor:pointer;font-size:12px;"><input type="checkbox" value="${d.id}" name="editDisease" ${cD.some(cd=>cd.disease_id===d.id)?'checked':''} style="accent-color:var(--primary);"> ${d.name}</label>`).join('')}</div>
+      <div class="section-title">الحساسيات الغذائية</div>
+      <div id="editAllergies" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">${aA.map(a=>`<label style="display:flex;align-items:center;gap:4px;background:#f5f5f5;padding:5px 9px;border-radius:8px;cursor:pointer;font-size:12px;"><input type="checkbox" value="${a.id}" name="editAllergy" ${cA.some(ca=>ca.allergy_id===a.id)?'checked':''} style="accent-color:var(--primary);"> ${a.name}</label>`).join('')}</div>
+      <div class="form-group"><label>ملاحظات</label><textarea id="eNotes">${client.notes||''}</textarea></div>
+      <button class="btn btn-primary btn-full" onclick="saveClientEdit('${clientId}')">💾 حفظ التعديلات</button>
+      <button class="btn btn-red btn-full" onclick="deleteClient('${clientId}')" style="margin-top:8px;">🗑️ حذف العميل نهائياً</button>
+    </div>
+  `);
+  loadMList(clientId);
+  loadSubDetails(clientId,subs);
+}
+
+function switchTab(tab,btn){
+  document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.inner-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).style.display='block';
+  btn.classList.add('active');
+}
+
+async function loadMList(clientId){
+  const ms=await db.get('body_measurements',`?client_id=eq.${clientId}&order=measured_at.desc`);
+  const el=document.getElementById('mList'); if(!el) return;
+  el.innerHTML=ms.length?ms.map(m=>`<div class="card" style="margin-bottom:7px;padding:11px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><strong style="font-size:12px;">${m.measured_at}</strong><span style="font-size:10px;color:#aaa;">${m.measured_by==='doctor'?'الدكتور':'ذاتي'}</span></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:11px;">${m.waist?`<div>خصر: <b>${m.waist}</b></div>`:''}${m.hips?`<div>أرداف: <b>${m.hips}</b></div>`:''}${m.arms?`<div>ذراع: <b>${m.arms}</b></div>`:''}${m.chest?`<div>صدر: <b>${m.chest}</b></div>`:''}${m.thighs?`<div>فخذ: <b>${m.thighs}</b></div>`:''}${m.notes?`<div style="grid-column:span 3;color:#777;">${m.notes}</div>`:''}</div></div>`).join(''):'<p style="text-align:center;color:#aaa;padding:20px;">لا توجد قياسات</p>';
+}
+
+function showMeasurementForm(clientId){
+  const el=document.getElementById('tab-measurements');
+  el.innerHTML=`<div class="form-row"><div class="form-group"><label>الخصر (سم)</label><input type="number" id="mWaist"></div><div class="form-group"><label>الأرداف (سم)</label><input type="number" id="mHips"></div></div><div class="form-row"><div class="form-group"><label>الذراع (سم)</label><input type="number" id="mArms"></div><div class="form-group"><label>الصدر (سم)</label><input type="number" id="mChest"></div></div><div class="form-group"><label>الفخذ (سم)</label><input type="number" id="mThighs"></div><div class="form-group"><label>ملاحظات</label><textarea id="mNotes"></textarea></div><button class="btn btn-primary btn-full" onclick="saveMeasurement('${clientId}')">💾 حفظ</button><button class="btn btn-outline btn-full" onclick="reloadMTab('${clientId}')" style="margin-top:8px;">← رجوع</button>`;
+}
+
+async function reloadMTab(clientId){
+  document.getElementById('tab-measurements').innerHTML=`<button class="btn btn-primary btn-full" onclick="showMeasurementForm('${clientId}')" style="margin-bottom:10px;">➕ إضافة قياسات</button><div id="mList">جاري التحميل...</div>`;
+  loadMList(clientId);
+}
+
+async function saveMeasurement(clientId){
+  loading(true);
+  await db.post('body_measurements',{client_id:clientId,measured_by:'doctor',waist:parseFloat(document.getElementById('mWaist').value)||null,hips:parseFloat(document.getElementById('mHips').value)||null,arms:parseFloat(document.getElementById('mArms').value)||null,chest:parseFloat(document.getElementById('mChest').value)||null,thighs:parseFloat(document.getElementById('mThighs').value)||null,notes:document.getElementById('mNotes').value,measured_at:new Date().toISOString().split('T')[0]});
+  loading(false);toast('تم حفظ القياسات ✅','#2e7d32');reloadMTab(clientId);
+}
+
+async function loadSubDetails(clientId,subs){
+  const el=document.getElementById('subDetails'); if(!el) return;
+  const packages=await db.get('packages','?is_active=eq.true&order=price');
+  const sub=subs[0];
+  el.innerHTML=`
+    ${sub?`<div class="card" style="margin-bottom:10px;padding:12px;"><div class="card-title" style="font-size:12px;">الاشتراك الحالي</div><div style="font-size:12px;"><span class="badge ${new Date()<=new Date(sub.end_date)?'badge-active':'badge-expired'}">${new Date()<=new Date(sub.end_date)?'نشط':'منتهي'}</span><div style="margin-top:6px;">من ${sub.start_date} ← ${sub.end_date}</div><div>جلسات: ${sub.sessions_used}/${sub.sessions_total} | مدفوع: ${sub.price_paid||'-'} ج</div></div></div>`:'<p style="color:#aaa;text-align:center;padding:12px;">لا يوجد اشتراك</p>'}
+    <div class="section-title">تجديد / اشتراك جديد</div>
+    <div class="form-group"><label>الباقة</label><select id="renewPkg">${packages.map(p=>`<option value="${p.id}" data-days="${p.duration_days}" data-sessions="${p.sessions}" data-price="${p.price}">${p.name} - ${p.price} ج (${p.duration_days} يوم / ${p.sessions} جلسات)</option>`).join('')}</select></div>
+    <div class="form-row"><div class="form-group"><label>تاريخ البداية</label><input type="date" id="renewStart" value="${new Date().toISOString().split('T')[0]}"></div><div class="form-group"><label>المبلغ المدفوع</label><input type="number" id="renewPaid" placeholder="السعر"></div></div>
+    <button class="btn btn-primary btn-full" onclick="renewSub('${clientId}')">🔄 تجديد الاشتراك</button>
+    ${sub?`<div class="section-title">تسجيل مرتجع</div><div class="form-row"><div class="form-group"><label>المبلغ</label><input type="number" id="refAmt"></div><div class="form-group"><label>السبب</label><input type="text" id="refReason"></div></div><button class="btn btn-danger btn-full" onclick="addRefund('${clientId}','${sub.id}')">تسجيل مرتجع</button>`:''}
+  `;
+}
+
+async function renewSub(clientId){
+  const sel=document.getElementById('renewPkg');const opt=sel.options[sel.selectedIndex];
+  const start=document.getElementById('renewStart').value;const paid=document.getElementById('renewPaid').value;
+  if(!start){toast('حدد تاريخ البداية','#c62828');return;}
+  loading(true);
+  const oldSubs=await db.get('subscriptions',`?client_id=eq.${clientId}&is_active=eq.true`);
+  for(const s of oldSubs) await db.patch('subscriptions',s.id,{is_active:false});
+  const days=parseInt(opt.dataset.days);
+  const end=new Date(new Date(start).getTime()+days*864e5).toISOString().split('T')[0];
+  await db.post('subscriptions',{client_id:clientId,package_id:sel.value,start_date:start,end_date:end,sessions_total:parseInt(opt.dataset.sessions),sessions_used:0,price_paid:parseFloat(paid)||parseFloat(opt.dataset.price),is_active:true});
+  await db.patch('clients',clientId,{subscription_approved:true});
+  await db.post('notifications',{client_id:clientId,title:'🎉 تم تجديد اشتراكك',message:`تم تجديد اشتراكك حتى ${end}. نتمنى لك رحلة صحية ناجحة!`,type:'celebration'});
+  loading(false);toast('تم التجديد ✅','#2e7d32');closeModal();
+}
+
+async function addRefund(clientId,subId){
+  const amount=parseFloat(document.getElementById('refAmt').value);const reason=document.getElementById('refReason').value;
+  if(!amount){toast('أدخل المبلغ','#c62828');return;}
+  loading(true);await db.post('refunds',{client_id:clientId,subscription_id:subId,amount,reason});
+  loading(false);toast('تم تسجيل المرتجع ✅','#2e7d32');
+}
+
+async function saveClientEdit(clientId){
+  loading(true);
+  await db.patch('clients',clientId,{name:document.getElementById('eName').value,phone:document.getElementById('ePhone').value,gender:document.getElementById('eGender').value,birth_date:document.getElementById('eBirth').value||null,height:parseFloat(document.getElementById('eHeight').value)||null,first_weight:parseFloat(document.getElementById('eFirstWeight').value)||null,goal:document.getElementById('eGoal').value,activity_level:document.getElementById('eActivity').value,address:document.getElementById('eAddress').value,notes:document.getElementById('eNotes').value});
+  await db.delWhere('client_diseases','client_id',clientId);
+  for(const d of [...document.querySelectorAll('input[name="editDisease"]:checked')]) await db.post('client_diseases',{client_id:clientId,disease_id:d.value});
+  await db.delWhere('client_allergies','client_id',clientId);
+  for(const a of [...document.querySelectorAll('input[name="editAllergy"]:checked')]) await db.post('client_allergies',{client_id:clientId,allergy_id:a.value});
+  loading(false);toast('تم حفظ التعديلات ✅','#2e7d32');closeModal();loadClients();
+}
+
+async function deleteClient(clientId){
+  const confirmed=await showConfirm('حذف العميل','سيتم حذف العميل وجميع بياناته نهائياً. هل أنت متأكد؟');
+  if(!confirmed) return;
+  loading(true);
+  await db.delWhere('client_diseases','client_id',clientId);await db.delWhere('client_allergies','client_id',clientId);
+  await db.delWhere('visits','client_id',clientId);await db.delWhere('body_measurements','client_id',clientId);
+  await db.delWhere('client_photos','client_id',clientId);await db.delWhere('notifications','client_id',clientId);
+  await db.delWhere('messages','client_id',clientId);await db.delWhere('subscriptions','client_id',clientId);
+  const cl=await db.get('clients',`?id=eq.${clientId}`);
+  if(cl[0]?.user_id) await db.del('users',cl[0].user_id);
+  await db.del('clients',clientId);
+  loading(false);closeModal();toast('تم حذف العميل ✅');loadClients();
+}
+
+// ======= VISITS =======
+async function showAddVisitModal(clientId){
+  const [clients,plans,categories,subs]=await Promise.all([db.get('clients',`?id=eq.${clientId}`),db.get('diet_plans','?order=name'),db.get('diet_categories',''),db.get('subscriptions',`?client_id=eq.${clientId}&is_active=eq.true`)]);
+  const client=clients[0];const sub=subs[0];
+  if(!sub||new Date()>new Date(sub.end_date)){toast('لا يوجد اشتراك نشط','#c62828');return;}
+  if(sub.sessions_used>=sub.sessions_total){toast('تم استنفاد الجلسات','#c62828');return;}
+  const prevV=await db.get('visits',`?client_id=eq.${clientId}`);
+  const usedPlans=new Set(prevV.filter(v=>v.diet_plan_id).map(v=>v.diet_plan_id));
+  const catMap={}; categories.forEach(c=>catMap[c.id]=c.name);
+  const grouped={};plans.forEach(p=>{const cat=catMap[p.category_id]||'أخرى';if(!grouped[cat])grouped[cat]=[];grouped[cat].push(p);});
+  openModal(`
+    <div class="modal-header"><span class="modal-title">➕ زيارة - ${client?.name}</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="background:#e8f5e9;padding:8px 12px;border-radius:10px;margin-bottom:10px;font-size:12px;">الجلسات المتبقية: <strong>${sub.sessions_total-sub.sessions_used}</strong> | ينتهي: <strong>${sub.end_date}</strong></div>
+    <div class="form-row"><div class="form-group"><label>تاريخ الزيارة</label><input type="date" id="vDate" value="${new Date().toISOString().split('T')[0]}"></div><div class="form-group"><label>الوزن (كجم)</label><input type="number" id="vWeight" step="0.1" placeholder="80.0"></div></div>
+    <div class="form-group"><label>ملاحظات</label><textarea id="vNotes" placeholder="ملاحظات..."></textarea></div>
+    <div class="form-group"><label>موعد الزيارة القادمة</label><input type="date" id="vNextDate"></div>
+    <input type="text" placeholder="🔍 ابحث في الخطط..." oninput="filterPlanOpts(this.value)" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-family:'Cairo',sans-serif;margin-bottom:8px;outline:none;">
+    <div class="section-title">اختر الخطة الغذائية</div>
+    <div id="plansContainer">
+      ${Object.entries(grouped).map(([cat,ps])=>`
+        <div class="accordion-header" onclick="toggleAcc(this)">${cat} <span>▼</span></div>
+        <div class="accordion-body open">${ps.map(p=>`<label class="plan-opt" style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;cursor:pointer;font-size:12px;${usedPlans.has(p.id)?'background:#e8f5e9;':''}"><input type="radio" name="vPlan" value="${p.id}" style="accent-color:var(--primary);flex-shrink:0;"> ${p.name} (${p.calories} سعر) ${usedPlans.has(p.id)?'✅':''}</label>`).join('')}</div>
+      `).join('')}
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveVisit('${clientId}')" style="margin-top:10px;">💾 حفظ الزيارة</button>
+  `);
+}
+
+function toggleAcc(h){const b=h.nextElementSibling;b.classList.toggle('open');h.querySelector('span').textContent=b.classList.contains('open')?'▲':'▼';}
+function filterPlanOpts(q){document.querySelectorAll('.plan-opt').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'flex':'none';});}
+
+async function saveVisit(clientId){
+  const planId=document.querySelector('input[name="vPlan"]:checked')?.value;
+  const date=document.getElementById('vDate').value;
+  if(!date){toast('حدد تاريخ الزيارة','#c62828');return;}
+  loading(true);
+  await db.post('visits',{client_id:clientId,visit_date:date,weight:parseFloat(document.getElementById('vWeight').value)||null,notes:document.getElementById('vNotes').value,next_visit_date:document.getElementById('vNextDate').value||null,diet_plan_id:planId||null});
+  const subs=await db.get('subscriptions',`?client_id=eq.${clientId}&is_active=eq.true`);
+  if(subs[0]) await db.patch('subscriptions',subs[0].id,{sessions_used:subs[0].sessions_used+1});
+  if(planId){
+    const [cD,cA,tips]=await Promise.all([db.get('client_diseases',`?client_id=eq.${clientId}`),db.get('client_allergies',`?client_id=eq.${clientId}`),db.get('health_tips','')]);
+    const rel=tips.filter(t=>(t.type==='disease'&&cD.some(d=>d.disease_id===t.reference_id))||(t.type==='allergy'&&cA.some(a=>a.allergy_id===t.reference_id)));
+    if(rel.length) await db.post('notifications',{client_id:clientId,title:'🌿 نصائح صحية مع خطتك',message:rel.map(t=>`💡 ${t.title}:\n${t.content}`).join('\n\n'),type:'reminder'});
+  }
+  loading(false);closeModal();toast('تم حفظ الزيارة ✅','#2e7d32');
+}
+
+async function showVisitDetail(visitId,clientId){
+  const [visits,plans,allLabs,allMeds]=await Promise.all([db.get('visits',`?id=eq.${visitId}`),db.get('diet_plans',''),db.get('lab_tests','?order=name'),db.get('medications','?order=name')]);
+  const visit=visits[0];if(!visit) return;
+  const plan=plans.find(p=>p.id===visit.diet_plan_id);
+  openModal(`
+    <div class="modal-header"><span class="modal-title">📋 زيارة ${visit.visit_date}</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="background:#f5f5f5;padding:12px;border-radius:10px;margin-bottom:12px;font-size:13px;">
+      ${visit.weight?`<div>⚖️ الوزن: <strong>${visit.weight} كجم</strong></div>`:''}
+      ${plan?`<div>📋 الخطة: <strong>${plan.name}</strong></div>`:''}
+      ${visit.notes?`<div>📝 ${visit.notes}</div>`:''}
+      ${visit.next_visit_date?`<div style="color:var(--primary);">📅 القادمة: ${visit.next_visit_date}</div>`:''}
+    </div>
+    <div class="section-title">طلب تحاليل</div>
+    <select id="labSel" multiple style="width:100%;height:90px;border:1.5px solid var(--border);border-radius:10px;padding:6px;font-family:'Cairo',sans-serif;font-size:12px;">${allLabs.map(l=>`<option value="${l.id}">${l.name}</option>`).join('')}</select>
+    <button class="btn btn-outline btn-sm btn-full" onclick="sendLabs('${visitId}','${clientId}')" style="margin-top:6px;">📤 إرسال طلب التحاليل</button>
+    <div class="section-title">وصف أدوية</div>
+    <div id="medRows"><div class="form-row" style="margin-bottom:6px;"><select id="medS0" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;">${allMeds.map(m=>`<option value="${m.id}">${m.name}</option>`).join('')}</select><input type="text" id="medD0" placeholder="الجرعة" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;"></div></div>
+    <div style="display:flex;gap:8px;margin-top:6px;">
+      <button class="btn btn-outline btn-sm" onclick="addMedRow(${JSON.stringify(allMeds.map(m=>({id:m.id,name:m.name})))})">+ دواء</button>
+      <button class="btn btn-outline btn-sm" onclick="sendMeds('${visitId}','${clientId}')">📤 إرسال الوصفة</button>
+    </div>
+  `);
+}
+
+let medRowCount=1;
+function addMedRow(meds){const i=medRowCount++;const div=document.createElement('div');div.className='form-row';div.style.marginBottom='6px';div.innerHTML=`<select id="medS${i}" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;">${meds.map(m=>`<option value="${m.id}">${m.name}</option>`).join('')}</select><input type="text" id="medD${i}" placeholder="الجرعة" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;">`;document.getElementById('medRows').appendChild(div);}
+
+async function sendLabs(visitId,clientId){const sel=document.getElementById('labSel');const sel2=[...sel.selectedOptions];if(!sel2.length){toast('اختر تحليلاً','#c62828');return;}loading(true);for(const o of sel2) await db.post('client_lab_requests',{client_id:clientId,lab_test_id:o.value,visit_id:visitId,status:'pending',notes:o.text});await db.post('notifications',{client_id:clientId,title:'🔬 تحاليل مطلوبة',message:`يرجى إجراء: ${sel2.map(o=>o.text).join(' - ')}`,type:'reminder'});loading(false);toast('تم إرسال طلب التحاليل ✅','#2e7d32');}
+
+async function sendMeds(visitId,clientId){loading(true);const det=[];for(let i=0;i<medRowCount;i++){const s=document.getElementById(`medS${i}`);const d=document.getElementById(`medD${i}`);if(s?.value){await db.post('client_medication_requests',{client_id:clientId,medication_id:s.value,visit_id:visitId,dosage:d?.value||'',status:'pending'});det.push(`• ${s.options[s.selectedIndex].text}: ${d?.value||''}`);}}if(det.length){await db.post('notifications',{client_id:clientId,title:'💊 وصفة دوائية',message:`الأدوية الموصوفة:\n${det.join('\n')}`,type:'reminder'});toast('تم إرسال الوصفة ✅','#2e7d32');}loading(false);}
+
+// ======= PLANS =======
+async function loadPlans(){
+  const [plans,categories]=await Promise.all([db.get('diet_plans','?order=name'),db.get('diet_categories','?order=name')]);
+  const catMap={}; categories.forEach(c=>catMap[c.id]=c.name);
+  const grouped={};plans.forEach(p=>{const cat=catMap[p.category_id]||'غير مصنف';if(!grouped[cat])grouped[cat]=[];grouped[cat].push(p);});
+  document.getElementById('mainContent').innerHTML=`
+    <button class="btn btn-primary btn-full" onclick="showAddPlanModal()" style="margin-bottom:10px;">➕ إضافة خطة جديدة</button>
+    <input class="search-input" placeholder="🔍 ابحث في الخطط..." oninput="filterPlans(this.value)" style="margin-bottom:10px;">
+    <div id="plansList">
+      ${Object.entries(grouped).map(([cat,ps])=>`<div class="accordion-header" onclick="toggleAcc(this)">${cat} (${ps.length}) <span>▼</span></div><div class="accordion-body open">${ps.map(p=>`<div class="list-item plan-item" onclick="openPlan('${p.id}')"><div class="avatar" style="background:var(--primary-dark);font-size:11px;">${p.code?.substring(0,2)||'خ'}</div><div class="item-info"><div class="item-name">${p.name}</div><div class="item-sub">${p.code} • ${p.calories} سعر • ${p.days_count} أيام</div></div></div>`).join('')}</div>`).join('')||'<p style="text-align:center;color:#aaa;padding:30px;">لا توجد خطط</p>'}
+    </div>`;
+}
+function filterPlans(q){document.querySelectorAll('.plan-item').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'flex':'none';});}
+
+async function showAddPlanModal(){
+  const cats=await db.get('diet_categories','?order=name');
+  openModal(`
+    <div class="modal-header"><span class="modal-title">➕ خطة جديدة</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="form-row"><div class="form-group"><label>كود الخطة</label><input type="text" id="pCode" placeholder="K1200"></div><div class="form-group"><label>اسم الخطة</label><input type="text" id="pName" placeholder="خطة 1200 سعر"></div></div>
+    <div class="form-row"><div class="form-group"><label>الفئة</label><select id="pCat"><option value="">اختر</option>${cats.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div><div class="form-group"><label>السعرات</label><input type="number" id="pCal" placeholder="1200"></div></div>
+    <div class="form-group"><label>عدد الأيام</label><input type="number" id="pDays" value="7"></div>
+    <button class="btn btn-outline btn-full" onclick="genDays()" style="margin-bottom:10px;">⚙️ إنشاء نماذج الأيام</button>
+    <div id="daysContainer"></div>
+    <button class="btn btn-primary btn-full" onclick="savePlan()">💾 حفظ الخطة</button>
+  `);
+}
+
+window._mc={};
+function genDays(){const days=parseInt(document.getElementById('pDays').value)||7;const c=document.getElementById('daysContainer');c.innerHTML='';window._mc={};for(let d=1;d<=days;d++){window._mc[d]=1;c.innerHTML+=`<div class="section-title">اليوم ${d}</div><div id="mday-${d}"><div class="form-row" style="margin-bottom:6px;"><input type="text" placeholder="اسم الوجبة" id="mn-${d}-1" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;"><textarea placeholder="المحتوى" id="mc-${d}-1" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;resize:none;height:52px;font-size:11px;"></textarea></div></div><button class="btn btn-outline btn-sm" onclick="addMealPlan(${d})" style="margin-bottom:6px;">+ وجبة</button>`;}}
+function addMealPlan(day){window._mc[day]=(window._mc[day]||1)+1;const i=window._mc[day];const div=document.createElement('div');div.className='form-row';div.style.marginBottom='6px';div.innerHTML=`<input type="text" placeholder="اسم الوجبة" id="mn-${day}-${i}" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;"><textarea placeholder="المحتوى" id="mc-${day}-${i}" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;resize:none;height:52px;font-size:11px;"></textarea>`;document.getElementById(`mday-${day}`).appendChild(div);}
+
+async function savePlan(){
+  const code=document.getElementById('pCode').value.trim();const name=document.getElementById('pName').value.trim();
+  if(!code||!name){toast('أدخل الكود والاسم','#c62828');return;}
+  loading(true);
+  const days=parseInt(document.getElementById('pDays').value)||7;
+  const pa=await db.post('diet_plans',{code,name,category_id:document.getElementById('pCat').value||null,calories:parseInt(document.getElementById('pCal').value)||0,days_count:days});
+  const planId=pa[0]?.id;
+  if(planId){for(let d=1;d<=days;d++){const da=await db.post('diet_plan_days',{plan_id:planId,day_number:d});const dayId=da[0]?.id;if(dayId){const count=window._mc[d]||1;for(let m=1;m<=count;m++){const mName=document.getElementById(`mn-${d}-${m}`)?.value;const mContent=document.getElementById(`mc-${d}-${m}`)?.value;if(mName) await db.post('diet_plan_meals',{day_id:dayId,meal_order:m,meal_name:mName,content:mContent||''});}}}}
+  loading(false);closeModal();toast('تم حفظ الخطة ✅','#2e7d32');loadPlans();
+}
+
+async function openPlan(planId){
+  loading(true);
+  const [plans,days]=await Promise.all([db.get('diet_plans',`?id=eq.${planId}`),db.get('diet_plan_days',`?plan_id=eq.${planId}&order=day_number`)]);
+  const plan=plans[0];if(!plan){loading(false);return;}
+  const meals=days.length?await db.get('diet_plan_meals',`?day_id=in.(${days.map(d=>d.id).join(',')})`):[]; 
+  const mbd={}; days.forEach(d=>{mbd[d.id]=meals.filter(m=>m.day_id===d.id).sort((a,b)=>a.meal_order-b.meal_order);});
+  loading(false);
+  openModal(`
+    <div class="modal-header"><span class="modal-title">📋 ${plan.name}</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="background:#e8f5e9;padding:10px;border-radius:10px;margin-bottom:10px;font-size:12px;">كود: <strong>${plan.code}</strong> | سعرات: <strong>${plan.calories}</strong> | أيام: <strong>${plan.days_count}</strong></div>
+    ${days.map(d=>`<div class="accordion-header" onclick="toggleAcc(this)">اليوم ${d.day_number} (${mbd[d.id].length} وجبات) <span>▼</span></div><div class="accordion-body open">${mbd[d.id].map(m=>`<div style="padding:8px;background:#f9f9f9;border-radius:8px;margin-bottom:5px;"><div style="font-weight:700;font-size:12px;color:var(--primary);">${m.meal_name}</div><div style="font-size:12px;color:#555;white-space:pre-line;margin-top:2px;">${m.content}</div></div>`).join('')}</div>`).join('')}
+    <button class="btn btn-red btn-full" onclick="delPlan('${planId}')" style="margin-top:12px;">🗑️ حذف الخطة</button>
+  `);
+}
+
+async function delPlan(planId){const c=await showConfirm('حذف الخطة','هل تريد حذف هذه الخطة نهائياً؟');if(!c) return;loading(true);await db.del('diet_plans',planId);loading(false);closeModal();toast('تم الحذف ✅');loadPlans();}
+
+// ======= CHAT =======
+let chatInt;
+async function loadChat(){
+  clearInterval(chatInt);
+  const clients=await db.get('clients','?order=name');
+  const msgs=await db.get('messages','?sender_role=eq.client&is_read=eq.false');
+  const unreadMap={};msgs.forEach(m=>{unreadMap[m.client_id]=(unreadMap[m.client_id]||0)+1;});
+  document.getElementById('mainContent').innerHTML=`
+    <div id="chatList">
+      <input class="search-input" placeholder="🔍 ابحث عن عميل..." oninput="filterChatClients(this.value)" style="margin-bottom:10px;">
+      ${clients.map(c=>`<div class="list-item chat-cl" onclick="openClientChat('${c.id}')"><div class="avatar">${c.name.charAt(0)}</div><div class="item-info"><div class="item-name">${c.name}</div><div class="item-sub">${c.phone||''}</div></div>${unreadMap[c.id]?`<span style="background:#f44336;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">${unreadMap[c.id]}</span>`:''}</div>`).join('')||'<p style="text-align:center;color:#aaa;padding:30px;">لا يوجد عملاء</p>'}
+    </div>
+    <div id="chatWin" style="display:none;flex-direction:column;height:calc(100vh - 130px);"></div>`;
+}
+function filterChatClients(q){document.querySelectorAll('.chat-cl').forEach(el=>{el.style.display=el.textContent.toLowerCase().includes(q.toLowerCase())?'flex':'none';});}
+
+async function openClientChat(clientId){
+  clearInterval(chatInt);
+  const clients=await db.get('clients',`?id=eq.${clientId}`);const client=clients[0];
+  const list=document.getElementById('chatList');const win=document.getElementById('chatWin');
+  if(!win) return;
+  list.style.display='none';win.style.display='flex';
+  win.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--primary);border-radius:12px;color:white;margin-bottom:8px;flex-shrink:0;">
+      <button onclick="clearInterval(chatInt);document.getElementById('chatWin').style.display='none';document.getElementById('chatList').style.display='block';" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:0 4px;">←</button>
+      <div class="avatar" style="width:34px;height:34px;font-size:13px;flex-shrink:0;">${client?.name?.charAt(0)||'?'}</div>
+      <strong style="font-size:13px;">${client?.name||''}</strong>
+    </div>
+    <div id="chatMsgs" style="flex:1;overflow-y:auto;padding:2px;"></div>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-shrink:0;">
+      <input type="text" id="chatIn" placeholder="اكتب رسالة..." style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:12px;font-family:'Cairo',sans-serif;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')sendMsg('${clientId}')">
+      <input type="file" id="chatFile" accept="image/*,.pdf" style="display:none;" onchange="sendFile('${clientId}')">
+      <button onclick="document.getElementById('chatFile').click()" style="background:#f5f5f5;border:1.5px solid var(--border);padding:10px;border-radius:12px;cursor:pointer;font-size:15px;">📎</button>
+      <button onclick="sendMsg('${clientId}')" class="btn btn-primary btn-sm">إرسال</button>
+    </div>`;
+  await loadMsgs(clientId);
+  chatInt=setInterval(()=>loadMsgs(clientId),5000);
+}
+
+async function loadMsgs(clientId){
+  const msgs=await db.get('messages',`?client_id=eq.${clientId}&order=created_at.asc`);
+  for(const m of msgs.filter(m=>!m.is_read&&m.sender_role==='client')) await db.patch('messages',m.id,{is_read:true});
+  document.getElementById('chatBadge').style.display='none';
+  const c=document.getElementById('chatMsgs');if(!c){clearInterval(chatInt);return;}
+  c.innerHTML=msgs.length?msgs.map(m=>`<div class="chat-msg ${m.sender_role==='doctor'?'sent':'received'}"><div class="chat-bubble">${m.message?`<div>${m.message}</div>`:''}${m.file_url?`<a href="${m.file_url}" target="_blank"><img src="${m.file_url}" style="max-width:180px;border-radius:8px;margin-top:4px;display:block;"></a>`:''}<div class="chat-time">${new Date(m.created_at).toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'})}</div></div></div>`).join(''):'<div style="text-align:center;padding:40px;color:#aaa;">لا توجد رسائل</div>';
+  c.scrollTop=c.scrollHeight;
+}
+
+async function sendMsg(clientId){const inp=document.getElementById('chatIn');const text=inp.value.trim();if(!text) return;inp.value='';await db.post('messages',{client_id:clientId,sender_role:'doctor',message:text,is_read:false});loadMsgs(clientId);}
+async function sendFile(clientId){const file=document.getElementById('chatFile').files[0];if(!file) return;loading(true);const url=await storage.upload('nutrition',`chat/${clientId}/${Date.now()}-${file.name}`,file);await db.post('messages',{client_id:clientId,sender_role:'doctor',file_url:url,file_type:file.type.includes('pdf')?'pdf':'image',is_read:false});loading(false);loadMsgs(clientId);}
+
+// ======= FINANCE =======
+async function loadFinance(){
+  const [subs,refunds,packages,clients]=await Promise.all([db.get('subscriptions','?order=created_at.desc'),db.get('refunds','?order=created_at.desc'),db.get('packages',''),db.get('clients','')]);
+  const pkgMap={}; packages.forEach(p=>pkgMap[p.id]=p);const clientMap={}; clients.forEach(c=>clientMap[c.id]=c);
+  const totalRev=subs.reduce((s,sub)=>s+(sub.price_paid||0),0);
+  const totalRef=refunds.reduce((s,r)=>s+r.amount,0);
+  const activeSubs=subs.filter(s=>new Date()<=new Date(s.end_date));
+  const expiredSubs=subs.filter(s=>new Date()>new Date(s.end_date));
+  const now=new Date();const monthFrom=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0];
+
+  document.getElementById('mainContent').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num" style="color:var(--primary);font-size:18px;">${totalRev.toFixed(0)}</div><div class="stat-label">إجمالي الإيرادات (ج)</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--error);font-size:18px;">${totalRef.toFixed(0)}</div><div class="stat-label">إجمالي المرتجعات (ج)</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:#1565c0;font-size:18px;">${(totalRev-totalRef).toFixed(0)}</div><div class="stat-label">صافي الإيراد (ج)</div></div>
+      <div class="stat-card"><div class="stat-num" style="font-size:18px;">${activeSubs.length}</div><div class="stat-label">اشتراكات نشطة</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 تقرير بالمدة</div>
+      <div class="form-row" style="margin-bottom:8px;">
+        <div class="form-group" style="margin-bottom:0;"><label>من</label><input type="date" id="rFrom" value="${monthFrom}"></div>
+        <div class="form-group" style="margin-bottom:0;"><label>إلى</label><input type="date" id="rTo" value="${now.toISOString().split('T')[0]}"></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="genReport()" style="margin-top:6px;">🔍 عرض التقرير</button>
+      <div id="reportResult"></div>
+    </div>
+    <div class="inner-tabs">
+      <button class="inner-tab active" onclick="filterFin('all',this)">الكل (${subs.length})</button>
+      <button class="inner-tab" onclick="filterFin('active',this)">نشط (${activeSubs.length})</button>
+      <button class="inner-tab" onclick="filterFin('expired',this)">منتهي (${expiredSubs.length})</button>
+      <button class="inner-tab" onclick="filterFin('refunds',this)">مرتجعات (${refunds.length})</button>
+    </div>
+    <div id="finList">
+      ${subs.map(s=>{const c=clientMap[s.client_id];const p=pkgMap[s.package_id];const isActive=new Date()<=new Date(s.end_date);return`<div class="list-item fin-item" data-type="${isActive?'active':'expired'}" onclick="openClientDetail('${s.client_id}')"><div class="avatar" style="background:${isActive?'var(--primary)':'#aaa'};font-size:12px;">${c?.name?.charAt(0)||'?'}</div><div class="item-info"><div class="item-name">${c?.name||'-'}</div><div class="item-sub">${p?.name||'-'} • ${s.start_date} ← ${s.end_date}</div></div><div style="text-align:left;flex-shrink:0;"><div style="font-weight:700;color:var(--primary);font-size:13px;">${s.price_paid||0} ج</div><span class="badge ${isActive?'badge-active':'badge-expired'}" style="font-size:10px;">${isActive?'نشط':'منتهي'}</span></div></div>`;}).join('')}
+      ${refunds.map(r=>{const c=clientMap[r.client_id];return`<div class="list-item fin-item" data-type="refunds" style="display:none;"><div class="avatar" style="background:var(--error);font-size:12px;">${c?.name?.charAt(0)||'؟'}</div><div class="item-info"><div class="item-name">${c?.name||'-'} - مرتجع</div><div class="item-sub">${r.reason||''} • ${r.created_at?.split('T')[0]||''}</div></div><div style="font-weight:700;color:var(--error);flex-shrink:0;">-${r.amount} ج</div></div>`;}).join('')}
+    </div>`;
+}
+
+function filterFin(type,btn){document.querySelectorAll('.inner-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.fin-item').forEach(el=>{el.style.display=(type==='all'||el.dataset.type===type)?'flex':'none';});}
+
+async function genReport(){
+  const from=document.getElementById('rFrom').value;const to=document.getElementById('rTo').value;
+  if(!from||!to){toast('حدد المدة','#c62828');return;}
+  const [subs,refunds,clients,packages]=await Promise.all([db.get('subscriptions',`?start_date=gte.${from}&start_date=lte.${to}&order=start_date.asc`),db.get('refunds',`?created_at=gte.${from}&created_at=lte.${to+'T23:59:59'}`),db.get('clients',''),db.get('packages','')]);
+  const cm={}; clients.forEach(c=>cm[c.id]=c);const pm={}; packages.forEach(p=>pm[p.id]=p);
+  const totalRev=subs.reduce((s,sub)=>s+(sub.price_paid||0),0);const totalRef=refunds.reduce((s,r)=>s+r.amount,0);
+  document.getElementById('reportResult').innerHTML=`
+    <div style="background:#e8f5e9;padding:12px;border-radius:10px;margin-top:10px;">
+      <div style="font-weight:700;font-size:13px;margin-bottom:8px;">📊 تقرير من ${from} إلى ${to}</div>
+      <div class="form-row" style="font-size:12px;">
+        <div>اشتراكات: <strong>${subs.length}</strong></div>
+        <div>إيرادات: <strong>${totalRev} ج</strong></div>
+        <div>مرتجعات: <strong style="color:var(--error)">${totalRef} ج</strong></div>
+        <div>صافي: <strong style="color:var(--primary)">${totalRev-totalRef} ج</strong></div>
+      </div>
+    </div>
+    ${subs.length?`<div style="margin-top:8px;font-size:11px;">${subs.map(s=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;"><span>${cm[s.client_id]?.name||'-'} - ${pm[s.package_id]?.name||'-'} (${s.start_date})</span><strong>${s.price_paid||0} ج</strong></div>`).join('')}</div>`:''}`;
+}
+
+// ======= SETTINGS =======
+async function loadSettings(){
+  document.getElementById('mainContent').innerHTML=`
+    <div class="inner-tabs" style="flex-wrap:wrap;">
+      <button class="inner-tab active" onclick="loadSTab('clinic',this)">العيادات</button>
+      <button class="inner-tab" onclick="loadSTab('packages',this)">الباقات</button>
+      <button class="inner-tab" onclick="loadSTab('categories',this)">الفئات</button>
+      <button class="inner-tab" onclick="loadSTab('medical',this)">الطبي</button>
+      <button class="inner-tab" onclick="loadSTab('labs',this)">تحاليل</button>
+      <button class="inner-tab" onclick="loadSTab('meds',this)">أدوية</button>
+      <button class="inner-tab" onclick="loadSTab('alts',this)">البدائل</button>
+      <button class="inner-tab" onclick="loadSTab('tips',this)">النصائح</button>
+      <button class="inner-tab" onclick="loadSTab('account',this)">حسابي</button>
+    </div>
+    <div id="sContent"></div>`;
+  loadSTab('clinic',document.querySelector('.inner-tab'));
+}
+
+async function loadSTab(tab,btn){
+  document.querySelectorAll('.inner-tab').forEach(t=>t.classList.remove('active'));btn?.classList.add('active');
+  const c=document.getElementById('sContent');c.innerHTML='<div style="text-align:center;padding:20px;color:#aaa;">جاري التحميل...</div>';
+  if(tab==='clinic'){const d=await db.get('clinics','');c.innerHTML=`<button class="btn btn-primary btn-full" onclick="showAddClinicModal()" style="margin-bottom:10px;">➕ إضافة عيادة</button>${d.map(cl=>`<div class="list-item"><div class="item-info"><div class="item-name">${cl.name}</div><div class="item-sub">${cl.phone||''} ${cl.address?'• '+cl.address:''}</div></div><button class="btn btn-red btn-sm" onclick="delItem('clinics','${cl.id}','العيادة')">🗑️</button></div>`).join('')||'<p style="text-align:center;color:#aaa;padding:20px;">لا توجد عيادات</p>'}`;}
+  else if(tab==='packages'){const d=await db.get('packages','?order=price');c.innerHTML=`<button class="btn btn-primary btn-full" onclick="showAddPkgModal()" style="margin-bottom:10px;">➕ إضافة باقة</button>${d.map(p=>`<div class="list-item"><div class="item-info"><div class="item-name">${p.name}</div><div class="item-sub">${p.duration_days} يوم • ${p.sessions} جلسة • ${p.price} ج</div></div><button class="btn btn-red btn-sm" onclick="delItem('packages','${p.id}','الباقة')">🗑️</button></div>`).join('')||'<p style="text-align:center;color:#aaa;padding:20px;">لا توجد باقات</p>'}`;}
+  else if(tab==='categories'){const d=await db.get('diet_categories','?order=name');c.innerHTML=`<div style="display:flex;gap:8px;margin-bottom:10px;"><input type="text" id="newCat" class="search-input" placeholder="اسم الفئة" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="addSimple('diet_categories',document.getElementById('newCat').value)">إضافة</button></div>${d.map(ct=>`<div class="list-item"><div class="item-name">${ct.name}</div><button class="btn btn-red btn-sm" onclick="delItem('diet_categories','${ct.id}','الفئة')">🗑️</button></div>`).join('')}`;}
+  else if(tab==='medical'){const [dis,all]=await Promise.all([db.get('chronic_diseases','?order=name'),db.get('food_allergies','?order=name')]);c.innerHTML=`<div class="section-title">الأمراض</div><div style="display:flex;gap:8px;margin-bottom:8px;"><input type="text" id="newDis" class="search-input" placeholder="اسم المرض" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="addSimple('chronic_diseases',document.getElementById('newDis').value)">إضافة</button></div>${dis.map(d=>`<div class="list-item"><div class="item-name">${d.name}</div><button class="btn btn-red btn-sm" onclick="delItem('chronic_diseases','${d.id}','المرض')">🗑️</button></div>`).join('')}<div class="section-title">الحساسيات</div><div style="display:flex;gap:8px;margin-bottom:8px;"><input type="text" id="newAll" class="search-input" placeholder="اسم الحساسية" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="addSimple('food_allergies',document.getElementById('newAll').value)">إضافة</button></div>${all.map(a=>`<div class="list-item"><div class="item-name">${a.name}</div><button class="btn btn-red btn-sm" onclick="delItem('food_allergies','${a.id}','الحساسية')">🗑️</button></div>`).join('')}`;}
+  else if(tab==='labs'){const d=await db.get('lab_tests','?order=name');c.innerHTML=`<div style="display:flex;gap:8px;margin-bottom:10px;"><input type="text" id="newLab" class="search-input" placeholder="اسم التحليل" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="addSimple('lab_tests',document.getElementById('newLab').value)">إضافة</button></div>${d.map(l=>`<div class="list-item"><div class="item-name">${l.name}</div><button class="btn btn-red btn-sm" onclick="delItem('lab_tests','${l.id}','التحليل')">🗑️</button></div>`).join('')}`;}
+  else if(tab==='meds'){const d=await db.get('medications','?order=name');c.innerHTML=`<div style="display:flex;gap:8px;margin-bottom:10px;"><input type="text" id="newMed" class="search-input" placeholder="اسم الدواء" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="addSimple('medications',document.getElementById('newMed').value)">إضافة</button></div>${d.map(m=>`<div class="list-item"><div class="item-name">${m.name}</div><button class="btn btn-red btn-sm" onclick="delItem('medications','${m.id}','الدواء')">🗑️</button></div>`).join('')}`;}
+  else if(tab==='alts'){const [cats,alts]=await Promise.all([db.get('food_alt_categories','?order=name'),db.get('food_alternatives','?order=food_name')]);const catMap={};cats.forEach(ct=>catMap[ct.id]=ct.name);c.innerHTML=`<div class="section-title">فئات البدائل</div><div style="display:flex;gap:8px;margin-bottom:8px;"><input type="text" id="newAltCat" class="search-input" placeholder="اسم الفئة" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="addSimple('food_alt_categories',document.getElementById('newAltCat').value)">إضافة</button></div>${cats.map(ct=>`<div class="list-item"><div class="item-name">${ct.name}</div><button class="btn btn-red btn-sm" onclick="delItem('food_alt_categories','${ct.id}','الفئة')">🗑️</button></div>`).join('')}<div class="section-title">إضافة بديل غذائي</div><div class="form-row" style="margin-bottom:6px;"><input type="text" id="newAltFood" class="search-input" placeholder="اسم الطعام"><input type="text" id="newAltAlts" class="search-input" placeholder="البدائل (مفصولة بـ -)"></div><div style="display:flex;gap:8px;margin-bottom:10px;"><select id="newAltCatSel" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;"><option value="">الفئة (اختياري)</option>${cats.map(ct=>`<option value="${ct.id}">${ct.name}</option>`).join('')}</select><button class="btn btn-primary btn-sm" onclick="addAlt()">إضافة</button></div>${alts.map(a=>`<div class="list-item"><div class="item-info"><div class="item-name">${a.food_name}</div><div class="item-sub">${a.alternatives}</div></div><button class="btn btn-red btn-sm" onclick="delItem('food_alternatives','${a.id}','البديل')">🗑️</button></div>`).join('')}`;}
+  else if(tab==='tips'){const [tips,dis,all]=await Promise.all([db.get('health_tips',''),db.get('chronic_diseases','?order=name'),db.get('food_allergies','?order=name')]);window._tD=dis;window._tA=all;c.innerHTML=`<div class="form-group"><label>العنوان</label><input type="text" id="tipT" placeholder="عنوان النصيحة"></div><div class="form-group"><label>المحتوى</label><textarea id="tipC" placeholder="نص النصيحة..."></textarea></div><div class="form-row"><div class="form-group"><label>النوع</label><select id="tipType" onchange="updateTipRef()"><option value="disease">مرض</option><option value="allergy">حساسية</option></select></div><div class="form-group"><label>مرتبط بـ</label><select id="tipRef">${dis.map(d=>`<option value="${d.id}">${d.name}</option>`).join('')}</select></div></div><button class="btn btn-primary btn-full" onclick="addTip()">➕ إضافة نصيحة</button><div class="section-title">النصائح (${tips.length})</div>${tips.map(t=>`<div class="list-item"><div class="item-info"><div class="item-name">${t.title}</div><div class="item-sub">${t.content.substring(0,50)}...</div></div><button class="btn btn-red btn-sm" onclick="delItem('health_tips','${t.id}','النصيحة')">🗑️</button></div>`).join('')}`;}
+  else if(tab==='account'){const s=(await db.get('doctor_settings',`?user_id=eq.${user.id}`))[0]||{};c.innerHTML=`<div class="form-group"><label>رقم فودافون كاش</label><input type="tel" id="sVoda" value="${s.vodafone_cash||''}"></div><div class="form-group"><label>رقم انستا باي</label><input type="text" id="sInsta" value="${s.instapay||''}"></div><div class="form-group"><label>نصيحة اليوم</label><textarea id="sTip">${s.daily_tip||''}</textarea></div><button class="btn btn-primary btn-full" onclick="saveSettings('${s.id||''}')">💾 حفظ الإعدادات</button><div class="divider"></div><div class="form-group"><label>كلمة المرور الجديدة</label><input type="password" id="newPass" placeholder="6 أحرف على الأقل"></div><button class="btn btn-outline btn-full" onclick="changePass()">🔒 تغيير كلمة المرور</button>`;}
+}
+
+function updateTipRef(){const t=document.getElementById('tipType').value;const items=t==='disease'?window._tD:window._tA;document.getElementById('tipRef').innerHTML=(items||[]).map(i=>`<option value="${i.id}">${i.name}</option>`).join('');}
+async function addTip(){const title=document.getElementById('tipT').value.trim();const content=document.getElementById('tipC').value.trim();if(!title||!content){toast('أدخل العنوان والمحتوى','#c62828');return;}loading(true);await db.post('health_tips',{title,content,type:document.getElementById('tipType').value,reference_id:document.getElementById('tipRef').value||null});loading(false);toast('تم إضافة النصيحة ✅','#2e7d32');loadSettings();}
+async function addAlt(){const food=document.getElementById('newAltFood').value.trim();const alts=document.getElementById('newAltAlts').value.trim();if(!food||!alts){toast('أدخل الطعام والبدائل','#c62828');return;}loading(true);await db.post('food_alternatives',{food_name:food,alternatives:alts,category_id:document.getElementById('newAltCatSel').value||null});loading(false);toast('تم إضافة البديل ✅','#2e7d32');loadSettings();}
+async function addSimple(table,name){if(!name?.trim()){toast('أدخل الاسم','#c62828');return;}loading(true);await db.post(table,{name:name.trim()});loading(false);toast('تم الإضافة ✅','#2e7d32');loadSettings();}
+async function delItem(table,id,label){const c=await showConfirm('تأكيد الحذف',`هل تريد حذف هذا ${label}؟`);if(!c) return;loading(true);const ok=await db.del(table,id);loading(false);ok?toast('تم الحذف ✅'):toast('لم يتم الحذف، ربما مرتبط ببيانات أخرى','#c62828');loadSettings();}
+async function showAddClinicModal(){openModal(`<div class="modal-header"><span class="modal-title">➕ عيادة جديدة</span><button class="modal-close" onclick="closeModal()">✕</button></div><div class="form-group"><label>اسم العيادة</label><input type="text" id="cln"></div><div class="form-row"><div class="form-group"><label>الهاتف</label><input type="tel" id="clp"></div><div class="form-group"><label>العنوان</label><input type="text" id="cla"></div></div><button class="btn btn-primary btn-full" onclick="addClinic()">💾 حفظ</button>`);}
+async function addClinic(){const name=document.getElementById('cln').value.trim();if(!name){toast('أدخل اسم العيادة','#c62828');return;}loading(true);await db.post('clinics',{name,phone:document.getElementById('clp').value,address:document.getElementById('cla').value});loading(false);closeModal();toast('تم إضافة العيادة ✅','#2e7d32');loadSettings();}
+async function showAddPkgModal(){openModal(`<div class="modal-header"><span class="modal-title">➕ باقة جديدة</span><button class="modal-close" onclick="closeModal()">✕</button></div><div class="form-group"><label>اسم الباقة</label><input type="text" id="pn"></div><div class="form-row"><div class="form-group"><label>المدة (أيام)</label><input type="number" id="pd" value="30"></div><div class="form-group"><label>الجلسات</label><input type="number" id="ps" value="4"></div></div><div class="form-group"><label>السعر (جنيه)</label><input type="number" id="pp"></div><button class="btn btn-primary btn-full" onclick="addPkg()">💾 حفظ</button>`);}
+async function addPkg(){const name=document.getElementById('pn').value.trim();if(!name){toast('أدخل اسم الباقة','#c62828');return;}loading(true);await db.post('packages',{name,duration_days:parseInt(document.getElementById('pd').value)||30,sessions:parseInt(document.getElementById('ps').value)||4,price:parseFloat(document.getElementById('pp').value)||0,is_active:true});loading(false);closeModal();toast('تم إضافة الباقة ✅','#2e7d32');loadSettings();}
+async function saveSettings(sid){const d={user_id:user.id,vodafone_cash:document.getElementById('sVoda').value,instapay:document.getElementById('sInsta').value,daily_tip:document.getElementById('sTip').value};loading(true);if(sid) await db.patch('doctor_settings',sid,d);else await db.post('doctor_settings',d);loading(false);toast('تم حفظ الإعدادات ✅','#2e7d32');}
+async function changePass(){const p=document.getElementById('newPass').value;if(p.length<6){toast('6 أحرف على الأقل','#c62828');return;}loading(true);await db.patch('users',user.id,{password:p});localStorage.setItem('user',JSON.stringify({...user,password:p}));loading(false);toast('تم تغيير كلمة المرور ✅','#2e7d32');}
+
+// ======= BROADCAST =======
+async function showBroadcastModal(){
+  openModal(`<div class="modal-header"><span class="modal-title">📢 رسالة عامة</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="form-group"><label>العنوان</label><input type="text" id="bTitle" placeholder="عنوان الرسالة"></div>
+  <div class="form-group"><label>الرسالة</label><textarea id="bMsg" placeholder="نص الرسالة..."></textarea></div>
+  <div class="form-row"><div class="form-group"><label>النوع</label><select id="bType"><option value="reminder">تذكير</option><option value="motivation">تحفيز</option><option value="celebration">تهنئة</option><option value="offer">عرض</option><option value="warning">تنبيه</option></select></div><div class="form-group"><label>الجنس</label><select id="bGender"><option value="all">الكل</option><option value="male">ذكور</option><option value="female">إناث</option></select></div></div>
+  <div class="form-group"><label>الشريحة</label><select id="bSeg"><option value="all">الكل</option><option value="active">نشطين</option><option value="expired">منتهي اشتراكهم</option><option value="expiring">ينتهي خلال 7 أيام</option></select></div>
+  <div id="bPrev" style="background:#f5f5f5;padding:10px;border-radius:8px;font-size:12px;margin-bottom:10px;color:#aaa;">اضغط معاينة لحساب المستقبلين</div>
+  <div style="display:flex;gap:8px;"><button class="btn btn-outline" style="flex:1;" onclick="prevBroadcast()">👁️ معاينة</button><button class="btn btn-primary" style="flex:1;" onclick="sendBroadcast()">📤 إرسال</button></div>`);
+}
+
+async function getBClients(){let cl=await db.get('clients','');const g=document.getElementById('bGender').value;const seg=document.getElementById('bSeg').value;if(g!=='all') cl=cl.filter(c=>c.gender===g);if(seg!=='all'){const subs=await db.get('subscriptions','?is_active=eq.true');const sm={};subs.forEach(s=>sm[s.client_id]=s);const today=new Date();if(seg==='active') cl=cl.filter(c=>sm[c.id]&&new Date()<=new Date(sm[c.id].end_date));else if(seg==='expired') cl=cl.filter(c=>!sm[c.id]||new Date()>new Date(sm[c.id].end_date));else if(seg==='expiring') cl=cl.filter(c=>{const s=sm[c.id];if(!s)return false;const d=(new Date(s.end_date)-today)/864e5;return d>=0&&d<=7;});}return cl;}
+async function prevBroadcast(){const cl=await getBClients();document.getElementById('bPrev').innerHTML=`<strong style="color:var(--primary);">سيتم الإرسال لـ ${cl.length} عميل</strong>`;}
+async function sendBroadcast(){const title=document.getElementById('bTitle').value.trim();const msg=document.getElementById('bMsg').value.trim();if(!title||!msg){toast('أدخل العنوان والرسالة','#c62828');return;}loading(true);const cl=await getBClients();for(const c of cl) await db.post('notifications',{client_id:c.id,title,message:msg,type:document.getElementById('bType').value});loading(false);closeModal();toast(`تم الإرسال لـ ${cl.length} عميل ✅`,'#2e7d32');}
+
+// ======= ANALYTICS =======
+async function showAnalytics(){
+  document.getElementById('pageTitle').textContent='التحليلات';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const [visits,plans,subs,clients]=await Promise.all([db.get('visits',''),db.get('diet_plans',''),db.get('subscriptions',''),db.get('clients','')]);
+  const today=new Date().toISOString().split('T')[0];
+  const tV=visits.filter(v=>v.visit_date===today).length;
+  const pU={}; visits.filter(v=>v.diet_plan_id).forEach(v=>{pU[v.diet_plan_id]=(pU[v.diet_plan_id]||0)+1;});
+  const top=Object.entries(pU).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const pm={}; plans.forEach(p=>pm[p.id]=p.name);
+  const maxU=top[0]?.[1]||1;
+  document.getElementById('mainContent').innerHTML=`
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num">${tV}</div><div class="stat-label">حضروا اليوم</div></div>
+      <div class="stat-card"><div class="stat-num">${subs.filter(s=>new Date()<=new Date(s.end_date)).length}</div><div class="stat-label">اشتراك نشط</div></div>
+      <div class="stat-card"><div class="stat-num">${clients.filter(c=>c.gender==='male').length}</div><div class="stat-label">ذكور</div></div>
+      <div class="stat-card"><div class="stat-num">${clients.filter(c=>c.gender==='female').length}</div><div class="stat-label">إناث</div></div>
+    </div>
+    <div class="card"><div class="card-title">📊 أكثر الخطط استخداماً</div>${top.map(([id,count])=>`<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span>${pm[id]||'خطة'}</span><strong>${count} مرة</strong></div><div class="progress-bar"><div class="progress-fill" style="width:${(count/maxU*100).toFixed(0)}%"></div></div></div>`).join('')||'<p style="color:#aaa;text-align:center;">لا توجد بيانات</p>'}</div>`;
+}
+
+// ======= INIT =======
+showPage('home');
+</script>
+</body>
+</html>
